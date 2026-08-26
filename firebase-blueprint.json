@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "promo_claims": {
+      "title": "Promo & Voucher Claim",
+      "description": "Customer claims for promotions and vouchers",
+      "type": "object",
+      "properties": {
+        "customerName": {
+          "type": "string",
+          "description": "Customer full name"
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Customer WhatsApp or phone number"
+        },
+        "customerEmail": {
+          "type": "string",
+          "description": "Customer email (optional)"
+        },
+        "promoId": {
+          "type": "string",
+          "description": "ID of the promo or voucher"
+        },
+        "promoCode": {
+          "type": "string",
+          "description": "Unique promo voucher code"
+        },
+        "promoTitle": {
+          "type": "string",
+          "description": "Title of promo or voucher"
+        },
+        "discountTag": {
+          "type": "string",
+          "description": "Discount tag text"
+        },
+        "promoType": {
+          "type": "string",
+          "description": "promo or voucher"
+        },
+        "validUntil": {
+          "type": "string",
+          "description": "Expiry validity date string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "redeemed"],
+          "description": "Claim status"
+        },
+        "claimedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of claim"
+        }
+      },
+      "required": ["customerName", "customerPhone", "promoCode", "promoTitle", "claimedAt"]
+    },
+    "custom_promos": {
+      "title": "Custom Promos",
+      "description": "Store promos managed by owner / cashier",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "code": { "type": "string" },
+        "discountTag": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "description": { "type": "string" },
+        "validUntil": { "type": "string" },
+        "badge": { "type": "string" },
+        "image": { "type": "string" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["title", "code", "discountTag"]
+    },
+    "promo_settings": {
+      "title": "Promo Settings",
+      "description": "Store promo configurations like disabled promo IDs",
+      "type": "object",
+      "properties": {
+        "disabledIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/promo_claims/{claimId}": {
+      "allow": {
+        "read": "true",
+        "create": "request.resource.data.customerName != '' && request.resource.data.customerPhone != ''",
+        "update": "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'redeemedAt'])",
+        "delete": "false"
+      }
+    },
+    "/custom_promos/{promoId}": {
+      "allow": {
+        "read": "true",
+        "create": "request.resource.data.title != '' && request.resource.data.code != ''",
+        "update": "true",
+        "delete": "true"
+      }
+    },
+    "/promo_settings/{settingId}": {
+      "allow": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
+    }
+  }
+}

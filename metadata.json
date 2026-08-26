@@ -1,0 +1,6 @@
+{
+  "name": "Arkanza Coffee & Roastery",
+  "description": "Website Menu, Promo & Voucher interaktif untuk Arkanza Coffee & Roastery dengan konsep modern coffee shop, premium, earthy, dan cozy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

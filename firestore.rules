@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /promo_claims/{claimId} {
+      allow read: if true;
+      allow create: if request.resource.data.customerName is string &&
+                      request.resource.data.customerName.size() > 0 &&
+                      request.resource.data.customerPhone is string &&
+                      request.resource.data.customerPhone.size() > 0;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'redeemedAt']);
+      allow delete: if false;
+    }
+    match /custom_promos/{promoId} {
+      allow read: if true;
+      allow create, update: if request.resource.data.title is string &&
+                              request.resource.data.title.size() > 0 &&
+                              request.resource.data.code is string &&
+                              request.resource.data.code.size() > 0;
+      allow delete: if true;
+    }
+    match /promo_settings/{settingId} {
+      allow read, write: if true;
+    }
+  }
+}

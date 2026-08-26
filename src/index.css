@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  
+  --color-arkan-black: #111111;
+  --color-arkan-offwhite: #F7F6F2;
+  --color-arkan-green: #1F4D3A;
+  --color-arkan-darkgreen: #163A2C;
+  --color-arkan-brown: #6B4A35;
+  --color-arkan-warmbrown: #A98262;
+}
+
+@layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #111111;
+    background-color: #F7F6F2;
+    scroll-behavior: smooth;
+  }
+}
+
+.font-editorial {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #163A2C10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1F4D3A50;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1F4D3A;
+}
+
+/* Texture pattern overlay utility */
+.bg-grain {
+  background-image: radial-gradient(rgba(31, 77, 58, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.bg-dark-grain {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  background-size: 20px 20px;
+}
