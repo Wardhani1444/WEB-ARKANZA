@@ -222,7 +222,7 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
                   id="claim-customer-phone"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="Contoh: 085730848166"
+                  placeholder="Contoh: 081125512006"
                   required
                   className="w-full px-3 py-2.5 text-xs rounded-lg bg-white/5 border border-white/15 focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366] focus:outline-none text-white placeholder-gray-500 transition-all"
                 />

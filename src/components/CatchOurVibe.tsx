@@ -5,9 +5,10 @@ import { VibePhoto } from '../types';
 
 interface CatchOurVibeProps {
   photos: VibePhoto[];
+  onOpenGalleryManager?: () => void;
 }
 
-export const CatchOurVibe: React.FC<CatchOurVibeProps> = ({ photos }) => {
+export const CatchOurVibe: React.FC<CatchOurVibeProps> = ({ photos, onOpenGalleryManager }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   const categories = ['All', 'Coffee', 'Interior', 'Barista', 'Food', 'Community'];
@@ -35,9 +36,9 @@ export const CatchOurVibe: React.FC<CatchOurVibeProps> = ({ photos }) => {
           </div>
 
           <div className="mt-6 md:mt-0">
-            <div className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-white/10 text-white text-xs font-bold uppercase tracking-widest border border-white/15">
-              <Camera className="w-4 h-4 text-[#A98262]" />
-              <span>Galeri Arkanza Roastery</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white/70 text-xs font-bold uppercase tracking-widest border border-white/10">
+              <Camera className="w-3.5 h-3.5 text-[#A98262]" />
+              <span>Galeri Arkanza</span>
             </div>
           </div>
         </div>

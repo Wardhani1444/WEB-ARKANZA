@@ -9,10 +9,10 @@ import { Hero } from './components/Hero';
 import { PromosSection } from './components/PromosSection';
 import { PromoDetailModal } from './components/PromoDetailModal';
 import { CountdownPromo } from './components/CountdownPromo';
-import { VoucherSection } from './components/VoucherSection';
 import { VoucherClaimModal } from './components/VoucherClaimModal';
 import { ClaimedVouchersDrawer } from './components/ClaimedVouchersDrawer';
 import { AdminClaimsModal } from './components/AdminClaimsModal';
+import { HeroBackgroundCustomizerModal } from './components/HeroBackgroundCustomizerModal';
 import { OpeningHoursSection } from './components/OpeningHoursSection';
 import { CatchOurVibe } from './components/CatchOurVibe';
 import { LocationContact } from './components/LocationContact';
@@ -23,16 +23,22 @@ import { FloatingWhatsAppButton } from './components/FloatingWhatsAppButton';
 import { PROMO_ITEMS } from './data/promosData';
 import { VOUCHER_ITEMS } from './data/vouchersData';
 import { VIBE_PHOTOS } from './data/vibeData';
-import { PromoItem, VoucherItem, ToastNotification, CustomerData } from './types';
+import { PromoItem, VoucherItem, ToastNotification, CustomerData, VibePhoto, HeroSettings } from './types';
 import { subscribeToCustomPromos, subscribeToDisabledPromoIds, getLocalDisabledPromoIds } from './services/promoService';
+import { subscribeToVibePhotos, getLocalVibePhotos } from './services/vibeService';
+import { subscribeToHeroSettings, getLocalHeroSettings } from './services/heroService';
 
 export default function App() {
   // Real-time custom promos from Firebase Firestore
   const [customPromos, setCustomPromos] = useState<PromoItem[]>([]);
   // Real-time disabled promo IDs from Firebase / LocalStorage
   const [disabledPromoIds, setDisabledPromoIds] = useState<string[]>(() => getLocalDisabledPromoIds());
+  // Real-time Catch Our Vibe gallery photos from Firebase / LocalStorage
+  const [vibePhotos, setVibePhotos] = useState<VibePhoto[]>(() => getLocalVibePhotos());
+  // Real-time Hero Background and Headlines from Firebase / LocalStorage
+  const [heroSettings, setHeroSettings] = useState<HeroSettings>(() => getLocalHeroSettings());
 
-  // Listen to custom promos & disabled promo settings from Firestore
+  // Listen to custom promos, disabled promo settings, vibe photos & hero background from Firestore
   useEffect(() => {
     const unsubscribePromos = subscribeToCustomPromos((promos) => {
       setCustomPromos(promos);
@@ -40,9 +46,17 @@ export default function App() {
     const unsubscribeDisabled = subscribeToDisabledPromoIds((disabledIds) => {
       setDisabledPromoIds(disabledIds);
     });
+    const unsubscribeVibe = subscribeToVibePhotos((photos) => {
+      setVibePhotos(photos);
+    });
+    const unsubscribeHero = subscribeToHeroSettings((settings) => {
+      setHeroSettings(settings);
+    });
     return () => {
       unsubscribePromos();
       unsubscribeDisabled();
+      unsubscribeVibe();
+      unsubscribeHero();
     };
   }, []);
 
@@ -102,6 +116,8 @@ export default function App() {
   const [claimedVoucherModalItem, setClaimedVoucherModalItem] = useState<VoucherItem | null>(null);
   const [isClaimedDrawerOpen, setIsClaimedDrawerOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [adminInitialTab, setAdminInitialTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero'>('claims');
+  const [isHeroCustomizerOpen, setIsHeroCustomizerOpen] = useState(false);
 
   // Copy state & Toasts
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -222,8 +238,9 @@ export default function App() {
 
       {/* 1. Hero Section (Dark, Warm, Earthy) */}
       <Hero
+        settings={heroSettings}
         onDiscoverPromo={() => scrollToSection('promo')}
-        onExploreVouchers={() => scrollToSection('voucher')}
+        onExploreLocation={() => scrollToSection('hours')}
       />
 
       {/* 2. Today's Special / Promos Section (Light) */}
@@ -237,37 +254,48 @@ export default function App() {
       {/* 3. Countdown Promo Section (Dark) */}
       <CountdownPromo onClaimFlashPromo={handleClaimFlashPromo} />
 
-      {/* 4. Special Voucher For You (Light with Dark Ticket Coupons) */}
-      <VoucherSection
-        vouchers={allVouchers}
-        claimedCodes={claimedCodes}
-        onClaimVoucher={handleClaimVoucher}
-        onCopyCode={handleCopyCode}
-        copiedCode={copiedCode}
-      />
-
-      {/* 5. Opening Hours & Live Open Status (Light) */}
+      {/* 4. Opening Hours & Live Open Status (Light) */}
       <OpeningHoursSection />
 
-      {/* 6. Catch Our Vibe - Instagram Grid (Dark) */}
-      <CatchOurVibe photos={VIBE_PHOTOS} />
+      {/* 6. Catch Our Vibe - Instagram Grid (Dark) with Real-Time Firestore Sync */}
+      <CatchOurVibe
+        photos={vibePhotos}
+        onOpenGalleryManager={() => {
+          setAdminInitialTab('manage_vibe');
+          setIsAdminModalOpen(true);
+        }}
+      />
 
       {/* 7. Find Us & Location (Light) */}
       <LocationContact />
 
       {/* 8. Footer (Dark) */}
-      <Footer onOpenAdminModal={() => setIsAdminModalOpen(true)} />
+      <Footer
+        onOpenAdminModal={() => {
+          setAdminInitialTab('claims');
+          setIsAdminModalOpen(true);
+        }}
+      />
 
       {/* Floating WhatsApp Quick Table Booking */}
       <FloatingWhatsAppButton onOpenToast={showToast} />
 
       {/* MODALS */}
-      {/* Admin / Cashier Claims & Customer Database Modal */}
+      {/* Hero Background Customizer Modal */}
+      <HeroBackgroundCustomizerModal
+        isOpen={isHeroCustomizerOpen}
+        onClose={() => setIsHeroCustomizerOpen(false)}
+        currentSettings={heroSettings}
+        onShowToast={showToast}
+      />
+
+      {/* Admin / Cashier Claims, Custom Promo & Gallery Manager Modal */}
       <AdminClaimsModal
         isOpen={isAdminModalOpen}
         onClose={() => setIsAdminModalOpen(false)}
         onShowToast={showToast}
         customPromos={customPromos}
+        initialTab={adminInitialTab}
       />
 
       {/* Promo Detail Modal */}
@@ -297,7 +325,7 @@ export default function App() {
         claimedVouchers={claimedVouchersList}
         onCopyCode={handleCopyCode}
         copiedCode={copiedCode}
-        onExploreMore={() => scrollToSection('voucher')}
+        onExploreMore={() => scrollToSection('promo')}
       />
     </div>
   );

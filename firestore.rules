@@ -21,5 +21,14 @@ service cloud.firestore {
     match /promo_settings/{settingId} {
       allow read, write: if true;
     }
+    match /vibe_photos/{photoId} {
+      allow read, write: if true;
+    }
+    match /hero_settings/{settingId} {
+      allow read, write: if true;
+    }
+    match /site_settings/{settingId} {
+      allow read, write: if true;
+    }
   }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Instagram, ExternalLink, Clock, Navigation, Share2, MessageSquare, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Instagram, ExternalLink, Clock, Navigation, Share2, MessageSquare, Sparkles, Music2 } from 'lucide-react';
 
 export const LocationContact: React.FC = () => {
   return (
@@ -58,14 +58,14 @@ export const LocationContact: React.FC = () => {
                 
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/6285730848166"
+                  href="https://wa.me/6281125512006"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-3 rounded bg-[#1F4D3A]/10 hover:bg-[#1F4D3A] text-[#1F4D3A] hover:text-white transition-all font-bold text-xs group cursor-pointer uppercase tracking-wider"
                 >
                   <div className="flex items-center gap-2.5">
                     <MessageSquare className="w-4 h-4" />
-                    <span>WhatsApp (+62 857-3084-8166)</span>
+                    <span>WhatsApp (+62 811-2551-2006)</span>
                   </div>
                   <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
                 </a>
@@ -84,9 +84,23 @@ export const LocationContact: React.FC = () => {
                   <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
                 </a>
 
+                {/* TikTok */}
+                <a
+                  href="https://www.tiktok.com/@arkanzacoffee"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-3 rounded bg-[#F7F6F2] hover:bg-[#111111] text-[#111111] hover:text-white transition-all font-bold text-xs group cursor-pointer uppercase tracking-wider"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Music2 className="w-4 h-4 text-[#A98262]" />
+                    <span>TikTok @arkanzacoffee</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100" />
+                </a>
+
                 {/* Linktree */}
                 <a
-                  href="https://linktr.ee"
+                  href="https://linktr.ee/arkanzacoffeeandroastery"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between p-3.5 rounded-xl bg-[#F7F6F2] hover:bg-[#6B4A35] text-[#111111] hover:text-white transition-all font-semibold text-xs group cursor-pointer"
@@ -100,11 +114,6 @@ export const LocationContact: React.FC = () => {
               </div>
 
             </div>
-
-            {/* Note */}
-            <p className="text-[11px] text-[#111111]/50 mt-6 pt-4 border-t border-black/5">
-              ☕ Free parking space, musholla nyaman, dan charging station tersedia di lokasi.
-            </p>
           </div>
 
           {/* Map Preview Card & Interactive Embed */}

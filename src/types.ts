@@ -72,3 +72,13 @@ export interface ToastNotification {
   message: string;
   type?: 'success' | 'info' | 'error';
 }
+
+export interface HeroSettings {
+  backgroundImage: string;
+  tagline?: string;
+  headlineMain?: string;
+  headlineAccent?: string;
+  subheadline?: string;
+  overlayOpacity?: number; // 0.1 to 0.9 (e.g. 0.35 = 35% opacity)
+  updatedAt?: string;
+}

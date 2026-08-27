@@ -8,7 +8,7 @@ interface FloatingWhatsAppButtonProps {
 }
 
 export const FloatingWhatsAppButton: React.FC<FloatingWhatsAppButtonProps> = ({
-  phoneNumber = '6285730848166',
+  phoneNumber = '6281125512006',
   onOpenToast,
 }) => {
   const [isOpen, setIsOpen] = useState(false);

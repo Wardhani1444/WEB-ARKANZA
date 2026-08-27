@@ -81,6 +81,20 @@
           "items": { "type": "string" }
         }
       }
+    },
+    "hero_settings": {
+      "title": "Hero Background Settings",
+      "description": "Configuration for homepage hero background image and text",
+      "type": "object",
+      "properties": {
+        "backgroundImage": { "type": "string" },
+        "tagline": { "type": "string" },
+        "headlineMain": { "type": "string" },
+        "headlineAccent": { "type": "string" },
+        "subheadline": { "type": "string" },
+        "overlayOpacity": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      }
     }
   },
   "firestore": {
@@ -101,6 +115,14 @@
       }
     },
     "/promo_settings/{settingId}": {
+      "allow": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
+    },
+    "/hero_settings/{settingId}": {
       "allow": {
         "read": "true",
         "create": "true",

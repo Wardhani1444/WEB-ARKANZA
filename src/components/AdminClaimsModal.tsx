@@ -30,8 +30,14 @@ import {
   Percent,
   Layers,
   FileText,
-  ExternalLink
+  ExternalLink,
+  Upload,
+  UploadCloud,
+  RotateCcw,
+  Sliders,
+  Link as LinkIcon
 } from 'lucide-react';
+import { compressAndEncodeImage } from '../utils/imageUtils';
 import { StoredPromoClaim, subscribeToClaims, updateClaimStatus, getAllClaims } from '../services/promoClaimService';
 import {
   addPromoToFirebase,
@@ -43,9 +49,26 @@ import {
   togglePromoStatus,
   NewPromoInput
 } from '../services/promoService';
-import { PromoItem } from '../types';
+import { PromoItem, VibePhoto, HeroSettings } from '../types';
 import { PROMO_ITEMS } from '../data/promosData';
 import { generateInvoiceReportPdf } from '../services/pdfReportService';
+import {
+  subscribeToVibePhotos,
+  updateVibePhotoInFirestore,
+  resetSingleVibePhoto,
+  PRESET_VIBE_SUGGESTIONS,
+  getLocalVibePhotos
+} from '../services/vibeService';
+import {
+  DEFAULT_HERO_SETTINGS,
+  HERO_PRESET_BACKGROUNDS,
+  getLocalHeroSettings,
+  subscribeToHeroSettings,
+  updateHeroSettingsInFirestore,
+  resetHeroSettings,
+  compressUploadedHeroImage,
+  HeroPreset
+} from '../services/heroService';
 import arkanzaLogo from '../assets/arkanza-logo.jpg';
 
 interface AdminClaimsModalProps {
@@ -53,6 +76,7 @@ interface AdminClaimsModalProps {
   onClose: () => void;
   onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   customPromos?: PromoItem[];
+  initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero';
 }
 
 // Preset photo options for quick visual selection
@@ -87,9 +111,17 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   isOpen,
   onClose,
   onShowToast,
+  initialTab = 'claims'
 }) => {
-  // Navigation tabs in Admin
-  const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos'>('claims');
+  // Navigation tabs in Admin: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero'
+  const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero'>(initialTab);
+
+  // Sync initialTab if changed from parent
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
 
   // Authentication PIN state (Default: 1234)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -115,6 +147,34 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   const [editingPromo, setEditingPromo] = useState<PromoItem | null>(null);
   const [deletingPromoId, setDeletingPromoId] = useState<string | null>(null);
 
+  // VIBE PHOTOS STATE (Catch Our Vibe Gallery)
+  const [vibePhotosList, setVibePhotosList] = useState<VibePhoto[]>(() => getLocalVibePhotos());
+  const [editingVibePhoto, setEditingVibePhoto] = useState<VibePhoto | null>(null);
+  const [vibePhotoTitle, setVibePhotoTitle] = useState('');
+  const [vibePhotoCaption, setVibePhotoCaption] = useState('');
+  const [vibePhotoCategory, setVibePhotoCategory] = useState<'Coffee' | 'Interior' | 'Barista' | 'Community' | 'Food'>('Coffee');
+  const [vibePhotoImage, setVibePhotoImage] = useState('');
+  const [vibePhotoLikes, setVibePhotoLikes] = useState<number>(350);
+  const [vibePhotoComments, setVibePhotoComments] = useState<number>(24);
+  const [isProcessingVibeImage, setIsProcessingVibeImage] = useState(false);
+  const [isDraggingVibeFile, setIsDraggingVibeFile] = useState(false);
+  const [isSavingVibePhoto, setIsSavingVibePhoto] = useState(false);
+  const [isResettingVibeId, setIsResettingVibeId] = useState<string | null>(null);
+
+  // HERO BACKGROUND SETTINGS STATE
+  const [heroSettingsData, setHeroSettingsData] = useState<HeroSettings>(() => getLocalHeroSettings());
+  const [heroBgUrl, setHeroBgUrl] = useState<string>(() => getLocalHeroSettings().backgroundImage);
+  const [heroTagline, setHeroTagline] = useState<string>(() => getLocalHeroSettings().tagline || '');
+  const [heroHeadlineMain, setHeroHeadlineMain] = useState<string>(() => getLocalHeroSettings().headlineMain || '');
+  const [heroHeadlineAccent, setHeroHeadlineAccent] = useState<string>(() => getLocalHeroSettings().headlineAccent || '');
+  const [heroSubheadline, setHeroSubheadline] = useState<string>(() => getLocalHeroSettings().subheadline || '');
+  const [heroOverlayOpacity, setHeroOverlayOpacity] = useState<number>(() => getLocalHeroSettings().overlayOpacity ?? 0.35);
+  const [heroCustomUrlInput, setHeroCustomUrlInput] = useState<string>('');
+  const [isProcessingHeroImage, setIsProcessingHeroImage] = useState<boolean>(false);
+  const [isSavingHero, setIsSavingHero] = useState<boolean>(false);
+  const [isResettingHero, setIsResettingHero] = useState<boolean>(false);
+  const [heroTabSubMode, setHeroTabSubMode] = useState<'preset' | 'upload' | 'url' | 'text'>('preset');
+
   // New Promo Form Fields
   const [newTitle, setNewTitle] = useState('');
   const [newCode, setNewCode] = useState('');
@@ -127,6 +187,8 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   const [newApplicableCategory, setNewApplicableCategory] = useState('All Menu');
   const [selectedImageUrl, setSelectedImageUrl] = useState(PRESET_PROMO_IMAGES[0].url);
   const [customImageUrl, setCustomImageUrl] = useState('');
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [termsList, setTermsList] = useState<string[]>([
     'Tunjukkan kode voucher kepada kasir saat pemesanan di Arkanza Coffee.',
     'Minimum pembelian berlaku sesuai ketentuan.',
@@ -134,7 +196,7 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   ]);
   const [newTermInput, setNewTermInput] = useState('');
 
-  // Real-time Firestore sync for Claims, Custom Promos & Disabled Promos
+  // Real-time Firestore sync for Claims, Custom Promos, Vibe & Hero Settings
   useEffect(() => {
     if (!isOpen || !isAuthenticated) return;
 
@@ -166,10 +228,28 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
       setDisabledPromoIds(disabledIds);
     });
 
+    // Realtime Firestore Listener for Vibe Photos
+    const unsubscribeVibe = subscribeToVibePhotos((photos) => {
+      setVibePhotosList(photos);
+    });
+
+    // Realtime Firestore Listener for Hero Settings
+    const unsubscribeHero = subscribeToHeroSettings((settings) => {
+      setHeroSettingsData(settings);
+      setHeroBgUrl(settings.backgroundImage);
+      setHeroTagline(settings.tagline || '');
+      setHeroHeadlineMain(settings.headlineMain || '');
+      setHeroHeadlineAccent(settings.headlineAccent || '');
+      setHeroSubheadline(settings.subheadline || '');
+      setHeroOverlayOpacity(settings.overlayOpacity ?? 0.35);
+    });
+
     return () => {
       unsubscribeClaims();
       unsubscribePromos();
       unsubscribeDisabled();
+      unsubscribeVibe();
+      unsubscribeHero();
     };
   }, [isOpen, isAuthenticated]);
 
@@ -313,6 +393,108 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
     ]);
 
     setShowCreatePromoForm(true);
+  };
+
+  // VIBE PHOTO HANDLERS
+  const handleStartEditVibePhoto = (photo: VibePhoto) => {
+    setEditingVibePhoto(photo);
+    setVibePhotoTitle(photo.title);
+    setVibePhotoCaption(photo.caption);
+    setVibePhotoCategory(photo.category);
+    setVibePhotoImage(photo.image);
+    setVibePhotoLikes(photo.likes || 350);
+    setVibePhotoComments(photo.comments || 24);
+  };
+
+  const handleVibeFileUploadProcess = async (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      onShowToast('Mohon pilih file gambar yang valid (JPG, PNG, WebP)', 'error');
+      return;
+    }
+
+    setIsProcessingVibeImage(true);
+    try {
+      const compressedDataUrl = await compressAndEncodeImage(file, 900, 900, 0.84);
+      setVibePhotoImage(compressedDataUrl);
+      onShowToast('Foto berhasil diunggah & dikompresi! Siap disimpan ke galeri.', 'success');
+    } catch (err: any) {
+      console.error('Error processing vibe image:', err);
+      onShowToast(err.message || 'Gagal memproses file foto', 'error');
+    } finally {
+      setIsProcessingVibeImage(false);
+      setIsDraggingVibeFile(false);
+    }
+  };
+
+  const handleSaveVibePhoto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVibePhoto) return;
+    if (!vibePhotoImage.trim()) {
+      onShowToast('Mohon sediakan foto atau pilih dari preset', 'error');
+      return;
+    }
+
+    setIsSavingVibePhoto(true);
+    try {
+      const updated: VibePhoto = {
+        ...editingVibePhoto,
+        title: vibePhotoTitle.trim() || editingVibePhoto.title,
+        caption: vibePhotoCaption.trim() || editingVibePhoto.caption,
+        category: vibePhotoCategory,
+        image: vibePhotoImage.trim(),
+        likes: Number(vibePhotoLikes) || 350,
+        comments: Number(vibePhotoComments) || 24,
+      };
+
+      await updateVibePhotoInFirestore(updated);
+      onShowToast(`Foto "${updated.title}" berhasil diperbarui & tersimpan permanen!`, 'success');
+      setEditingVibePhoto(null);
+    } catch (err: any) {
+      console.error('Failed to save vibe photo:', err);
+      onShowToast('Gagal menyimpan foto ke database', 'error');
+    } finally {
+      setIsSavingVibePhoto(false);
+    }
+  };
+
+  const handleResetVibePhoto = async (photoId: string) => {
+    setIsResettingVibeId(photoId);
+    try {
+      await resetSingleVibePhoto(photoId);
+      onShowToast('Foto berhasil dikembalikan ke tampilan awal bawaan', 'info');
+      if (editingVibePhoto?.id === photoId) {
+        setEditingVibePhoto(null);
+      }
+    } catch {
+      onShowToast('Gagal mereset foto', 'error');
+    } finally {
+      setIsResettingVibeId(null);
+    }
+  };
+
+  // Upload and compress image file from user device
+  const handleFileUploadProcess = async (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      onShowToast('Mohon pilih file gambar yang valid (JPG, PNG, WebP)', 'error');
+      return;
+    }
+
+    setIsProcessingImage(true);
+    try {
+      // Compress to optimal web dimensions & quality under 150KB for reliable Firestore persistence
+      const compressedDataUrl = await compressAndEncodeImage(file, 900, 900, 0.82);
+      setCustomImageUrl(compressedDataUrl);
+      setSelectedImageUrl('');
+      onShowToast('Foto berhasil diunggah & dikompresi! Siap disimpan secara permanen.', 'success');
+    } catch (err: any) {
+      console.error('Error processing image:', err);
+      onShowToast(err.message || 'Gagal memproses file foto', 'error');
+    } finally {
+      setIsProcessingImage(false);
+      setIsDraggingFile(false);
+    }
   };
 
   // Cancel Editing Promo
@@ -686,10 +868,37 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                   }`}
                 >
                   <Tag className="w-4 h-4 text-[#A98262]" />
-                  <span>Kelola &amp; Tambah Promo</span>
+                  <span>Kelola Promo</span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#A98262]/30 text-[#A98262]">
                     {PROMO_ITEMS.length + firestorePromos.length} Live
                   </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('manage_vibe')}
+                  className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'manage_vibe'
+                      ? 'border-emerald-400 text-white'
+                      : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4 text-emerald-400" />
+                  <span>Galeri Foto Vibe</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">
+                    {vibePhotosList.length} Foto
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('manage_hero')}
+                  className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'manage_hero'
+                      ? 'border-amber-400 text-white'
+                      : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Sliders className="w-4 h-4 text-amber-400" />
+                  <span>Background &amp; Hero</span>
                 </button>
               </div>
 
@@ -1274,57 +1483,176 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                         </div>
 
                         {/* Foto Banner Promo */}
-                        <div className="space-y-2">
-                          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                            Pilih Foto Banner Promo
-                          </label>
-                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                            {PRESET_PROMO_IMAGES.map((preset) => {
-                              const isSelected = selectedImageUrl === preset.url && !customImageUrl;
-                              return (
-                                <div
-                                  key={preset.name}
-                                  onClick={() => {
-                                    setSelectedImageUrl(preset.url);
-                                    setCustomImageUrl('');
-                                  }}
-                                  className={`group relative h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
-                                    isSelected
-                                      ? 'border-[#25D366] ring-2 ring-[#25D366]/40 scale-102'
-                                      : 'border-white/10 hover:border-white/40'
-                                  }`}
-                                >
-                                  <img
-                                    src={preset.url}
-                                    alt={preset.name}
-                                    className="w-full h-full object-cover"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                  <div className="absolute inset-0 bg-black/50 p-1 flex items-end">
-                                    <span className="text-[10px] text-white font-medium line-clamp-1">
-                                      {preset.name}
-                                    </span>
-                                  </div>
-                                  {isSelected && (
-                                    <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#25D366] text-black flex items-center justify-center font-bold text-xs">
-                                      ✓
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
+                        <div className="space-y-3 p-3.5 rounded-xl bg-white/5 border border-white/10">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-300">
+                              Foto Banner Promo
+                            </label>
+                            {customImageUrl && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCustomImageUrl('');
+                                  setSelectedImageUrl(PRESET_PROMO_IMAGES[0].url);
+                                }}
+                                className="text-[10px] text-amber-300 hover:text-amber-200 underline font-medium cursor-pointer"
+                              >
+                                Gunakan Pilihan Preset
+                              </button>
+                            )}
                           </div>
 
+                          {/* DRAG & DROP / FILE UPLOADER */}
+                          <div
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setIsDraggingFile(true);
+                            }}
+                            onDragLeave={() => setIsDraggingFile(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setIsDraggingFile(false);
+                              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                handleFileUploadProcess(e.dataTransfer.files[0]);
+                              }
+                            }}
+                            className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                              isDraggingFile
+                                ? 'border-[#25D366] bg-[#25D366]/10'
+                                : customImageUrl
+                                ? 'border-[#1F4D3A] bg-black/40'
+                                : 'border-white/20 hover:border-white/40 bg-white/5'
+                            }`}
+                          >
+                            <input
+                              type="file"
+                              id="promo-image-file-input"
+                              accept="image/png, image/jpeg, image/webp, image/jpg"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleFileUploadProcess(e.target.files[0]);
+                                }
+                              }}
+                            />
+
+                            {isProcessingImage ? (
+                              <div className="py-4 flex flex-col items-center justify-center gap-2">
+                                <RefreshCw className="w-6 h-6 animate-spin text-amber-400" />
+                                <p className="text-xs text-amber-200 font-medium">Sedang mengompresi & menyiapkan foto untuk database...</p>
+                              </div>
+                            ) : customImageUrl ? (
+                              <div className="flex flex-col sm:flex-row items-center gap-3">
+                                <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/20 shrink-0 shadow-md">
+                                  <img
+                                    src={customImageUrl}
+                                    alt="Preview Foto"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="text-left flex-1 space-y-1">
+                                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                                    <Check className="w-3 h-3" /> Foto Siap Tersimpan Permanen
+                                  </div>
+                                  <p className="text-xs text-white font-semibold">Foto Kustom Aktif</p>
+                                  <p className="text-[11px] text-gray-400">
+                                    Foto otomatis tersimpan di database Firebase &amp; tidak akan hilang saat halaman di-refresh.
+                                  </p>
+                                  <div className="pt-1 flex gap-2">
+                                    <label
+                                      htmlFor="promo-image-file-input"
+                                      className="px-2.5 py-1 rounded bg-white/15 hover:bg-white/25 text-[11px] text-white font-medium cursor-pointer transition-colors"
+                                    >
+                                      Ganti Foto
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setCustomImageUrl('');
+                                        setSelectedImageUrl(PRESET_PROMO_IMAGES[0].url);
+                                      }}
+                                      className="px-2.5 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-[11px] text-red-300 font-medium cursor-pointer"
+                                    >
+                                      Hapus
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <label
+                                htmlFor="promo-image-file-input"
+                                className="cursor-pointer flex flex-col items-center justify-center py-2"
+                              >
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-[#A98262]">
+                                  <UploadCloud className="w-5 h-5" />
+                                </div>
+                                <p className="text-xs font-bold text-white mb-0.5">
+                                  Klik untuk Unggah Foto dari Perangkat (Galeri / File)
+                                </p>
+                                <p className="text-[11px] text-gray-400">
+                                  atau tarik &amp; lepas (drag &amp; drop) file gambar di sini (JPG, PNG, WebP)
+                                </p>
+                              </label>
+                            )}
+                          </div>
+
+                          {/* PRESET PROMO IMAGES */}
                           <div className="pt-1 space-y-1.5">
+                            <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+                              Atau Pilih dari Galeri Preset:
+                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                              {PRESET_PROMO_IMAGES.map((preset) => {
+                                const isSelected = selectedImageUrl === preset.url && !customImageUrl;
+                                return (
+                                  <div
+                                    key={preset.name}
+                                    onClick={() => {
+                                      setSelectedImageUrl(preset.url);
+                                      setCustomImageUrl('');
+                                    }}
+                                    className={`group relative h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all ${
+                                      isSelected
+                                        ? 'border-[#25D366] ring-2 ring-[#25D366]/40 scale-102'
+                                        : 'border-white/10 hover:border-white/40 opacity-80 hover:opacity-100'
+                                    }`}
+                                  >
+                                    <img
+                                      src={preset.url}
+                                      alt={preset.name}
+                                      className="w-full h-full object-cover"
+                                      referrerPolicy="no-referrer"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 p-1 flex items-end">
+                                      <span className="text-[9px] text-white font-medium line-clamp-1">
+                                        {preset.name}
+                                      </span>
+                                    </div>
+                                    {isSelected && (
+                                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#25D366] text-black flex items-center justify-center font-bold text-[10px]">
+                                        ✓
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Direct URL input fallback */}
+                          <div className="pt-1">
                             <input
                               type="url"
-                              value={customImageUrl}
-                              onChange={(e) => setCustomImageUrl(e.target.value)}
-                              placeholder="Atau tempel URL gambar (https://...)"
+                              value={customImageUrl.startsWith('data:image') ? '' : customImageUrl}
+                              onChange={(e) => {
+                                setCustomImageUrl(e.target.value);
+                                if (e.target.value) setSelectedImageUrl('');
+                              }}
+                              placeholder="Atau tempel tautan URL gambar web langsung (https://...)"
                               className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/15 focus:border-[#25D366] focus:outline-none text-xs text-white placeholder-gray-500"
                             />
                             {customImageUrl.includes('instagram.com') && (
-                              <p className="text-[10px] text-amber-300 flex items-center gap-1 leading-tight">
+                              <p className="text-[10px] text-amber-300 flex items-center gap-1 leading-tight mt-1">
                                 ℹ️ Tautan Instagram akan otomatis disimpan sebagai tautan promo dan dipasangkan dengan foto kopi berkualitas tinggi.
                               </p>
                             )}
@@ -1631,6 +1959,770 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                 </div>
               )}
 
+              {/* TAB 3: CATCH OUR VIBE (PHOTO GALLERY MANAGER) */}
+              {activeTab === 'manage_vibe' && (
+                <div className="flex flex-col flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                  {/* Top Intro Header */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1F4D3A]/40 via-[#1F4D3A]/20 to-transparent border border-[#1F4D3A]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>Visual Stories Manager</span>
+                      </div>
+                      <h3 className="text-base sm:text-lg font-bold text-white font-serif italic">
+                        Kelola Foto Galeri (Catch Our Vibe)
+                      </h3>
+                      <p className="text-xs text-gray-300 mt-0.5 max-w-2xl leading-relaxed">
+                        Ubah foto galeri dengan mengunggah foto langsung dari galeri HP/laptop atau pilih dari koleksi preset estetik. Foto otomatis tersimpan permanen di cloud database.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-emerald-300 font-semibold">
+                        6 Slot Foto Aktif
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* FORM EDIT / GANTI FOTO (JIKA ADA FOTO YANG SEDANG DIEDIT) */}
+                  {editingVibePhoto && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-5 rounded-2xl bg-[#181818] border-2 border-emerald-500/50 shadow-2xl space-y-5"
+                    >
+                      <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-[#1F4D3A] text-white flex items-center justify-center font-bold text-xs">
+                            <Pencil className="w-4 h-4 text-emerald-300" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white">
+                              Ganti Foto: {editingVibePhoto.title}
+                            </h4>
+                            <p className="text-[11px] text-gray-400">
+                              Slot ID: {editingVibePhoto.id} &bull; Kategori: {editingVibePhoto.category}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setEditingVibePhoto(null)}
+                          className="px-3 py-1 rounded-lg text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 cursor-pointer"
+                        >
+                          Batal
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleSaveVibePhoto} className="space-y-4">
+                        {/* File Upload Box */}
+                        <div className="space-y-2">
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-300">
+                            Pilih atau Unggah Foto Baru
+                          </label>
+
+                          <div
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setIsDraggingVibeFile(true);
+                            }}
+                            onDragLeave={() => setIsDraggingVibeFile(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setIsDraggingVibeFile(false);
+                              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                handleVibeFileUploadProcess(e.dataTransfer.files[0]);
+                              }
+                            }}
+                            className={`relative border-2 border-dashed rounded-xl p-4 text-center transition-all ${
+                              isDraggingVibeFile
+                                ? 'border-emerald-400 bg-emerald-500/10'
+                                : vibePhotoImage
+                                ? 'border-[#1F4D3A] bg-black/40'
+                                : 'border-white/20 hover:border-white/40 bg-white/5'
+                            }`}
+                          >
+                            <input
+                              type="file"
+                              id="vibe-image-file-input"
+                              accept="image/png, image/jpeg, image/webp, image/jpg"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleVibeFileUploadProcess(e.target.files[0]);
+                                }
+                              }}
+                            />
+
+                            {isProcessingVibeImage ? (
+                              <div className="py-4 flex flex-col items-center justify-center gap-2">
+                                <RefreshCw className="w-6 h-6 animate-spin text-emerald-400" />
+                                <p className="text-xs text-emerald-200 font-medium">Sedang mengompresi &amp; menyiapkan foto galeri...</p>
+                              </div>
+                            ) : vibePhotoImage ? (
+                              <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <div className="relative w-28 h-28 rounded-xl overflow-hidden border border-white/20 shrink-0 shadow-lg aspect-square bg-black">
+                                  <img
+                                    src={vibePhotoImage}
+                                    alt="Preview Vibe"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="text-left flex-1 space-y-1.5">
+                                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                                    <Check className="w-3 h-3" /> Foto Siap Digunakan
+                                  </div>
+                                  <p className="text-xs text-white font-semibold">Tampilan Foto Galeri Baru</p>
+                                  <p className="text-[11px] text-gray-400">
+                                    Foto otomatis tersimpan permanen di cloud Firestore.
+                                  </p>
+                                  <div className="pt-1 flex gap-2">
+                                    <label
+                                      htmlFor="vibe-image-file-input"
+                                      className="px-3 py-1 rounded bg-white/15 hover:bg-white/25 text-xs text-white font-medium cursor-pointer transition-colors"
+                                    >
+                                      Ganti File Foto
+                                    </label>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <label
+                                htmlFor="vibe-image-file-input"
+                                className="cursor-pointer flex flex-col items-center justify-center py-3"
+                              >
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center mb-2 text-emerald-400">
+                                  <UploadCloud className="w-5 h-5" />
+                                </div>
+                                <p className="text-xs font-bold text-white mb-0.5">
+                                  Klik untuk Unggah Foto dari Perangkat (Galeri / Kamera)
+                                </p>
+                                <p className="text-[11px] text-gray-400">
+                                  atau tarik &amp; lepas (drag &amp; drop) file gambar di sini (JPG, PNG, WebP)
+                                </p>
+                              </label>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Preset Suggestions */}
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                            Atau Pilih dari Preset Foto Estetik Arkanza:
+                          </p>
+                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            {PRESET_VIBE_SUGGESTIONS.map((preset) => {
+                              const isSelected = vibePhotoImage === preset.url;
+                              return (
+                                <div
+                                  key={preset.name}
+                                  onClick={() => setVibePhotoImage(preset.url)}
+                                  className={`group relative h-16 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
+                                    isSelected
+                                      ? 'border-emerald-400 ring-2 ring-emerald-400/40 scale-102'
+                                      : 'border-white/10 hover:border-white/40 opacity-80 hover:opacity-100'
+                                  }`}
+                                >
+                                  <img
+                                    src={preset.url}
+                                    alt={preset.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/60 p-1 flex items-end">
+                                    <span className="text-[9px] text-white font-medium line-clamp-1">
+                                      {preset.name}
+                                    </span>
+                                  </div>
+                                  {isSelected && (
+                                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-400 text-black flex items-center justify-center font-bold text-[9px]">
+                                      ✓
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* URL direct link fallback */}
+                        <div>
+                          <input
+                            type="url"
+                            value={vibePhotoImage.startsWith('data:image') ? '' : vibePhotoImage}
+                            onChange={(e) => setVibePhotoImage(e.target.value)}
+                            placeholder="Atau masukkan tautan URL gambar eksternal (https://...)"
+                            className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/15 focus:border-emerald-400 focus:outline-none text-xs text-white placeholder-gray-500"
+                          />
+                        </div>
+
+                        {/* Form Fields: Title, Category, Caption, Likes */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+                              Judul Foto (Title)
+                            </label>
+                            <input
+                              type="text"
+                              value={vibePhotoTitle}
+                              onChange={(e) => setVibePhotoTitle(e.target.value)}
+                              placeholder="Contoh: Morning Dial-In & Latte Art"
+                              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/15 focus:border-emerald-400 focus:outline-none text-xs text-white"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+                              Kategori
+                            </label>
+                            <select
+                              value={vibePhotoCategory}
+                              onChange={(e) => setVibePhotoCategory(e.target.value as any)}
+                              className="w-full px-3 py-2 rounded-xl bg-[#222222] border border-white/15 focus:border-emerald-400 focus:outline-none text-xs text-white"
+                            >
+                              <option value="Coffee">Coffee (Racikan Kopi & Beans)</option>
+                              <option value="Interior">Interior (Suasana & Workspace)</option>
+                              <option value="Barista">Barista (Roastery & Craft)</option>
+                              <option value="Food">Food (Pastry & Makanan)</option>
+                              <option value="Community">Community (Nongkrong & Malam)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+                            Caption Cerita (Teks Instagram)
+                          </label>
+                          <textarea
+                            value={vibePhotoCaption}
+                            onChange={(e) => setVibePhotoCaption(e.target.value)}
+                            rows={2}
+                            placeholder="Tuliskan cerita singkat tentang foto ini..."
+                            className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/15 focus:border-emerald-400 focus:outline-none text-xs text-white"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+                              Jumlah Likes
+                            </label>
+                            <input
+                              type="number"
+                              value={vibePhotoLikes}
+                              onChange={(e) => setVibePhotoLikes(Number(e.target.value))}
+                              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/15 focus:border-emerald-400 focus:outline-none text-xs text-white font-mono"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-semibold text-gray-300 mb-1">
+                              Jumlah Komentar
+                            </label>
+                            <input
+                              type="number"
+                              value={vibePhotoComments}
+                              onChange={(e) => setVibePhotoComments(Number(e.target.value))}
+                              className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/15 focus:border-emerald-400 focus:outline-none text-xs text-white font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Submit Buttons */}
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            type="submit"
+                            disabled={isSavingVibePhoto}
+                            className="flex-1 py-2.5 rounded-xl bg-[#1F4D3A] hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+                          >
+                            {isSavingVibePhoto ? (
+                              <>
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                                <span>Menyimpan ke Cloud...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-4 h-4" />
+                                <span>Simpan Perubahan Foto</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setEditingVibePhoto(null)}
+                            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </form>
+                    </motion.div>
+                  )}
+
+                  {/* 6 FOTO GRID CARDS */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                        Daftar 6 Foto Galeri Catch Our Vibe
+                      </h4>
+                      <span className="text-[11px] text-[#A98262]">
+                        Klik tombol &quot;Ganti Foto&quot; pada slot yang diinginkan
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {vibePhotosList.map((photo, idx) => {
+                        const isCurrentlyEditing = editingVibePhoto?.id === photo.id;
+                        const isResetting = isResettingVibeId === photo.id;
+
+                        return (
+                          <div
+                            key={photo.id}
+                            className={`p-3 rounded-2xl border transition-all flex flex-col justify-between ${
+                              isCurrentlyEditing
+                                ? 'border-emerald-400 bg-emerald-950/20 ring-2 ring-emerald-500/30'
+                                : 'border-white/10 bg-white/5 hover:border-white/25'
+                            }`}
+                          >
+                            <div className="space-y-2.5">
+                              {/* Thumbnail preview with category pill */}
+                              <div className="relative aspect-video sm:aspect-square w-full rounded-xl overflow-hidden bg-black/60 border border-white/10">
+                                <img
+                                  src={photo.image}
+                                  alt={photo.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80';
+                                  }}
+                                />
+                                <div className="absolute top-2 left-2 flex gap-1.5">
+                                  <span className="px-2 py-0.5 rounded-full bg-[#1F4D3A] text-white font-bold text-[9px] uppercase tracking-wider shadow">
+                                    Slot #{idx + 1}
+                                  </span>
+                                  <span className="px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-sm text-emerald-300 font-semibold text-[9px] uppercase tracking-wider border border-white/15">
+                                    {photo.category}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div>
+                                <h5 className="text-sm font-bold text-white leading-snug line-clamp-1">
+                                  {photo.title}
+                                </h5>
+                                <p className="text-xs text-gray-400 line-clamp-2 mt-1 leading-relaxed">
+                                  {photo.caption}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="pt-3 mt-2 border-t border-white/10 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditVibePhoto(photo)}
+                                className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                                  isCurrentlyEditing
+                                    ? 'bg-emerald-500 text-black shadow'
+                                    : 'bg-[#1F4D3A] hover:bg-emerald-700 text-white shadow-sm'
+                                }`}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                                <span>Ganti Foto</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => handleResetVibePhoto(photo.id)}
+                                disabled={isResetting}
+                                className="py-1.5 px-2.5 rounded-xl bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white text-xs border border-white/10 transition-colors cursor-pointer"
+                                title="Kembalikan ke foto awal"
+                              >
+                                {isResetting ? (
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-300" />
+                                ) : (
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: HERO BACKGROUND & HEADER SETTINGS */}
+              {activeTab === 'manage_hero' && (
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  {/* HERO TAB SUB-NAV / HEADER */}
+                  <div className="p-4 sm:p-5 border-b border-white/10 bg-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Sliders className="w-4 h-4 text-amber-400" />
+                        Pengaturan Background &amp; Teks Hero Website
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Ganti gambar banner utama cafe, pilih preset estetik, sesuaikan headline atau kegelapan overlay.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!window.confirm('Kembalikan background & teks Hero ke setelan awal Arkanza?')) return;
+                          setIsResettingHero(true);
+                          try {
+                            const res = await resetHeroSettings();
+                            setHeroBgUrl(res.backgroundImage);
+                            setHeroTagline(res.tagline || '');
+                            setHeroHeadlineMain(res.headlineMain || '');
+                            setHeroHeadlineAccent(res.headlineAccent || '');
+                            setHeroSubheadline(res.subheadline || '');
+                            setHeroOverlayOpacity(res.overlayOpacity ?? 0.35);
+                            onShowToast('Background Hero telah direset ke default', 'success');
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setIsResettingHero(false);
+                          }
+                        }}
+                        disabled={isResettingHero}
+                        className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-rose-300 text-xs font-semibold border border-white/10 transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Reset Default</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsSavingHero(true);
+                          try {
+                            await updateHeroSettingsInFirestore({
+                              backgroundImage: heroBgUrl,
+                              tagline: heroTagline.trim(),
+                              headlineMain: heroHeadlineMain.trim(),
+                              headlineAccent: heroHeadlineAccent.trim(),
+                              subheadline: heroSubheadline.trim(),
+                              overlayOpacity: heroOverlayOpacity
+                            });
+                            onShowToast('✨ Background & Tampilan Hero berhasil disimpan ke server!', 'success');
+                          } catch (e) {
+                            console.error(e);
+                            onShowToast('Gagal menyimpan ke server, tersimpan di cache lokal', 'error');
+                          } finally {
+                            setIsSavingHero(false);
+                          }
+                        }}
+                        disabled={isSavingHero}
+                        className="px-5 py-2 rounded-xl bg-[#1F4D3A] hover:bg-[#256149] text-white text-xs font-bold shadow-lg shadow-[#1F4D3A]/30 transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>{isSavingHero ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* SCROLLABLE HERO SETTINGS BODY */}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                    {/* 1. Real-time Live Preview */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#A98262] flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5" />
+                          Pratinjau Langsung (Live Preview)
+                        </span>
+                        <span className="text-[11px] text-gray-400">
+                          Perubahan langsung terlihat sebelum disimpan
+                        </span>
+                      </div>
+
+                      <div className="relative w-full h-44 sm:h-52 rounded-2xl overflow-hidden border border-white/15 bg-black flex items-center justify-center text-center shadow-2xl">
+                        <img
+                          src={heroBgUrl}
+                          alt="Hero Live Preview"
+                          className="absolute inset-0 w-full h-full object-cover object-center"
+                        />
+                        <div
+                          className="absolute inset-0 bg-black transition-opacity"
+                          style={{ opacity: heroOverlayOpacity }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-[#111111]/80" />
+
+                        <div className="relative z-10 px-4 max-w-lg mx-auto pointer-events-none">
+                          {heroTagline && (
+                            <div className="inline-block mb-1.5 px-2.5 py-0.5 bg-[#1F4D3A] text-[10px] font-bold tracking-widest uppercase text-white rounded shadow">
+                              {heroTagline}
+                            </div>
+                          )}
+                          <h2 className="font-serif italic text-lg sm:text-2xl font-bold tracking-tight text-white leading-tight mb-1">
+                            {heroHeadlineMain} <span className="text-[#A98262]">{heroHeadlineAccent}</span>
+                          </h2>
+                          <p className="text-[11px] text-gray-300 line-clamp-2 max-w-sm mx-auto">
+                            {heroSubheadline}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Sub-tabs Selector */}
+                    <div className="flex border-b border-white/10 gap-1 overflow-x-auto pb-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setHeroTabSubMode('preset')}
+                        className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                          heroTabSubMode === 'preset'
+                            ? 'bg-[#1F4D3A] text-white'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Pilihan Preset Tema ({HERO_PRESET_BACKGROUNDS.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHeroTabSubMode('upload')}
+                        className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                          heroTabSubMode === 'upload'
+                            ? 'bg-[#1F4D3A] text-white'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Upload Foto Dari Perangkat
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHeroTabSubMode('url')}
+                        className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                          heroTabSubMode === 'url'
+                            ? 'bg-[#1F4D3A] text-white'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <LinkIcon className="w-3.5 h-3.5" />
+                        Link URL Gambar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setHeroTabSubMode('text')}
+                        className={`px-4 py-2 text-xs font-bold rounded-t-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                          heroTabSubMode === 'text'
+                            ? 'bg-[#1F4D3A] text-white'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Sliders className="w-3.5 h-3.5" />
+                        Edit Teks &amp; Kegelapan
+                      </button>
+                    </div>
+
+                    {/* SUBMODE 1: PRESET GRID */}
+                    {heroTabSubMode === 'preset' && (
+                      <div className="space-y-3">
+                        <p className="text-xs text-gray-400">
+                          Klik salah satu foto preset di bawah untuk langsung mengganti background Hero:
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {HERO_PRESET_BACKGROUNDS.map((preset) => {
+                            const isSelected = heroBgUrl === preset.url;
+                            return (
+                              <div
+                                key={preset.id}
+                                onClick={() => {
+                                  setHeroBgUrl(preset.url);
+                                  onShowToast(`Preset "${preset.name}" dipilih`, 'info');
+                                }}
+                                className={`group relative rounded-xl overflow-hidden border cursor-pointer transition-all duration-200 aspect-[4/3] ${
+                                  isSelected
+                                    ? 'border-amber-400 ring-2 ring-amber-400 scale-[1.02]'
+                                    : 'border-white/10 hover:border-white/40'
+                                }`}
+                              >
+                                <img
+                                  src={preset.url}
+                                  alt={preset.name}
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                                {isSelected && (
+                                  <div className="absolute top-2 right-2 bg-amber-400 text-black p-1 rounded-full shadow-lg">
+                                    <Check className="w-3 h-3 stroke-[3]" />
+                                  </div>
+                                )}
+
+                                <div className="absolute bottom-2 left-2 right-2 text-left">
+                                  <span className="text-[9px] uppercase tracking-wider text-[#A98262] font-semibold block">
+                                    {preset.category}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-white line-clamp-1">
+                                    {preset.name}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUBMODE 2: FILE UPLOAD */}
+                    {heroTabSubMode === 'upload' && (
+                      <div className="space-y-4">
+                        <label
+                          className="border-2 border-dashed border-white/20 hover:border-[#1F4D3A] bg-white/[0.02] hover:bg-white/[0.05] rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 block"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-[#1F4D3A]/20 flex items-center justify-center text-[#F7F6F2]">
+                            <Upload className="w-6 h-6 text-[#A98262]" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">
+                              Pilih Foto dari Galeri / Kamera / Komputer
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              Format JPG, PNG, atau WebP. Otomatis dikompresi agar loading kilat.
+                            </p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setIsProcessingHeroImage(true);
+                              try {
+                                const compressed = await compressUploadedHeroImage(file);
+                                setHeroBgUrl(compressed);
+                                onShowToast('Foto background berhasil dipasang!', 'success');
+                              } catch (err) {
+                                console.error(err);
+                                onShowToast('Gagal memproses gambar', 'error');
+                              } finally {
+                                setIsProcessingHeroImage(false);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          {isProcessingHeroImage && (
+                            <p className="text-xs text-[#A98262] font-semibold animate-pulse">
+                              Memproses gambar...
+                            </p>
+                          )}
+                        </label>
+                      </div>
+                    )}
+
+                    {/* SUBMODE 3: CUSTOM URL */}
+                    {heroTabSubMode === 'url' && (
+                      <div className="space-y-3 bg-white/[0.02] p-4 rounded-xl border border-white/10">
+                        <label className="block text-xs font-semibold text-gray-300">
+                          Masukkan URL Gambar Langsung:
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="url"
+                            value={heroCustomUrlInput}
+                            onChange={(e) => setHeroCustomUrlInput(e.target.value)}
+                            placeholder="https://images.unsplash.com/..."
+                            className="flex-1 bg-black/50 border border-white/20 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#1F4D3A]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!heroCustomUrlInput.trim()) return;
+                              setHeroBgUrl(heroCustomUrlInput.trim());
+                              onShowToast('URL Background kustom diterapkan!', 'success');
+                            }}
+                            className="px-5 py-2.5 bg-[#1F4D3A] hover:bg-[#256149] text-white text-xs font-bold rounded-xl transition-all shadow"
+                          >
+                            Terapkan
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SUBMODE 4: TEXT & OPACITY */}
+                    {heroTabSubMode === 'text' && (
+                      <div className="space-y-4 bg-white/[0.02] p-4 rounded-xl border border-white/10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Tagline Atas
+                            </label>
+                            <input
+                              type="text"
+                              value={heroTagline}
+                              onChange={(e) => setHeroTagline(e.target.value)}
+                              className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:border-[#1F4D3A] focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Tingkat Kegelapan Overlay ({(heroOverlayOpacity * 100).toFixed(0)}%)
+                            </label>
+                            <input
+                              type="range"
+                              min="0.10"
+                              max="0.85"
+                              step="0.05"
+                              value={heroOverlayOpacity}
+                              onChange={(e) => setHeroOverlayOpacity(parseFloat(e.target.value))}
+                              className="w-full accent-amber-400 cursor-pointer"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Headline Utama (Baris 1)
+                            </label>
+                            <input
+                              type="text"
+                              value={heroHeadlineMain}
+                              onChange={(e) => setHeroHeadlineMain(e.target.value)}
+                              className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:border-[#1F4D3A] focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Headline Aksen Emas (Baris 2)
+                            </label>
+                            <input
+                              type="text"
+                              value={heroHeadlineAccent}
+                              onChange={(e) => setHeroHeadlineAccent(e.target.value)}
+                              className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:border-[#1F4D3A] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2">
+                            <label className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Subheadline Deskripsi
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={heroSubheadline}
+                              onChange={(e) => setHeroSubheadline(e.target.value)}
+                              className="w-full bg-black/50 border border-white/20 rounded-lg px-3 py-2 text-xs text-white focus:border-[#1F4D3A] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* FOOTER BAR */}
               <div className="px-5 py-3 border-t border-white/10 bg-black/60 flex items-center justify-between text-xs text-gray-400 shrink-0">
                 <div className="flex items-center gap-2">
@@ -1641,9 +2733,14 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                 <div className="font-mono text-[11px] text-[#A98262]">
                   {activeTab === 'claims'
                     ? `Total: ${filteredClaims.length} Klaim Ditampilkan`
+                    : activeTab === 'manage_vibe'
+                    ? `${vibePhotosList.length} Foto Galeri Tersimpan`
+                    : activeTab === 'manage_hero'
+                    ? `Background Hero Aktif`
                     : `${allCatalogPromos.filter(p => p.isActive).length} Tayang di Web (${allCatalogPromos.length} Total Promo)`}
                 </div>
               </div>
+
             </div>
           )}
         </motion.div>

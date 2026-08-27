@@ -1,5 +1,5 @@
 import React from 'react';
-import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck } from 'lucide-react';
+import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck, Music2 } from 'lucide-react';
 import arkanzaLogo from '../assets/arkanza-logo.jpg';
 
 interface FooterProps {
@@ -14,8 +14,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal }) => {
   const navLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Promo Hari Ini', href: '#promo' },
-    { name: 'Special Voucher', href: '#voucher' },
     { name: 'Jam Operasional', href: '#hours' },
+    { name: 'Catch Our Vibe', href: '#vibe' },
     { name: 'Contact & Location', href: '#contact' },
   ];
 
@@ -64,16 +64,29 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal }) => {
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded bg-white/5 border border-white/10 hover:bg-[#1F4D3A] flex items-center justify-center text-white transition-all"
                 aria-label="Instagram"
+                title="Instagram @arkanzacoffeeandroastery"
               >
                 <Instagram className="w-4 h-4" />
               </a>
 
               <a
-                href="https://linktr.ee"
+                href="https://www.tiktok.com/@arkanzacoffee"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded bg-white/5 border border-white/10 hover:bg-[#111111] hover:border-[#25F4EE]/50 flex items-center justify-center text-white transition-all"
+                aria-label="TikTok"
+                title="TikTok @arkanzacoffee"
+              >
+                <Music2 className="w-4 h-4" />
+              </a>
+
+              <a
+                href="https://linktr.ee/arkanzacoffeeandroastery"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded bg-white/5 border border-white/10 hover:bg-[#6B4A35] flex items-center justify-center text-white transition-all"
                 aria-label="Linktree"
+                title="Linktree Resmi Arkanza"
               >
                 <Share2 className="w-4 h-4" />
               </a>

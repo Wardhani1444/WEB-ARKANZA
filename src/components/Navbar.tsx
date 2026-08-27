@@ -32,7 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Promo', href: '#promo' },
-    { name: 'Voucher', href: '#voucher' },
     { name: 'Hours', href: '#hours' },
     { name: 'Vibe', href: '#vibe' },
     { name: 'Contact', href: '#contact' },
@@ -112,12 +111,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             <a
-              href="#voucher"
-              onClick={(e) => handleNavClick(e, '#voucher')}
-              id="cta-navbar-voucher"
+              href="#promo"
+              onClick={(e) => handleNavClick(e, '#promo')}
+              id="cta-navbar-promo"
               className="inline-flex items-center justify-center px-6 py-2 rounded bg-[#1F4D3A] hover:bg-[#163A2C] text-white text-xs font-semibold tracking-wider uppercase transition-all duration-200 shadow-sm active:scale-95"
             >
-              KLAIM VOUCHER
+              LIHAT PROMO
             </a>
           </div>
 
@@ -180,11 +179,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
 
               <a
-                href="#voucher"
-                onClick={(e) => handleNavClick(e, '#voucher')}
+                href="#promo"
+                onClick={(e) => handleNavClick(e, '#promo')}
                 className="w-full py-3.5 rounded-xl bg-[#1F4D3A] text-white text-center font-semibold text-sm shadow-lg shadow-[#1F4D3A]/30"
               >
-                Klaim Voucher Sekarang
+                Lihat Promo Spesial
               </a>
 
               {onOpenAdminModal && (
