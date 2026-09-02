@@ -1,20 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Coffee, Ticket, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
-import arkanzaLogo from '../assets/arkanza-logo.jpg';
+import { BrandingSettings } from '../types';
+import defaultLogo from '../assets/arkanza-logo.jpg';
 
 interface NavbarProps {
   claimedCount: number;
   onOpenClaimedModal: () => void;
   onOpenAdminModal?: () => void;
+  brandingSettings?: BrandingSettings;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   claimedCount, 
   onOpenClaimedModal, 
-  onOpenAdminModal 
+  onOpenAdminModal,
+  brandingSettings
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const activeLogo = brandingSettings?.logoUrl || defaultLogo;
+  const brandName = brandingSettings?.brandName || 'ARKANZA';
+  const brandSubtitle = brandingSettings?.brandSubtitle || 'COFFEE & ROASTERY';
+  const shapeClass = brandingSettings?.logoShape === 'circle'
+    ? 'rounded-full'
+    : brandingSettings?.logoShape === 'square'
+    ? 'rounded-none'
+    : 'rounded-xl';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,6 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Promo', href: '#promo' },
+    { name: 'Review', href: '#testimonials' },
     { name: 'Hours', href: '#hours' },
     { name: 'Vibe', href: '#vibe' },
     { name: 'Contact', href: '#contact' },
@@ -64,20 +77,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-3 group focus:outline-none"
             id="navbar-brand-link"
           >
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden border border-[#A98262]/60 shadow-md group-hover:border-[#A98262] transition-colors bg-black p-0.5 flex items-center justify-center">
+            <div className={`relative w-9 h-9 sm:w-10 sm:h-10 overflow-hidden border border-[#A98262]/60 shadow-md group-hover:border-[#A98262] transition-colors bg-black p-0.5 flex items-center justify-center ${shapeClass}`}>
               <img
-                src={arkanzaLogo}
-                alt="Arkanza Coffee & Roastery Logo"
+                src={activeLogo}
+                alt={`${brandName} Logo`}
                 className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div className="flex flex-col text-left">
               <span className="font-serif italic text-base sm:text-lg font-bold tracking-wider text-[#F7F6F2] leading-tight">
-                ARKANZA
+                {brandName}
               </span>
               <span className="text-[9px] tracking-[0.25em] text-[#A98262] uppercase font-bold">
-                COFFEE &amp; ROASTERY
+                {brandSubtitle}
               </span>
             </div>
           </a>
@@ -185,19 +198,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 Lihat Promo Spesial
               </a>
-
-              {onOpenAdminModal && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onOpenAdminModal();
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-[#A98262] hover:text-white flex items-center justify-center gap-2 mt-1"
-                >
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Portal Kasir &amp; Data Customer (PIN)</span>
-                </button>
-              )}
             </div>
           </div>
         </div>

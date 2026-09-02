@@ -1,12 +1,23 @@
 import React from 'react';
 import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck, Music2 } from 'lucide-react';
-import arkanzaLogo from '../assets/arkanza-logo.jpg';
+import { BrandingSettings } from '../types';
+import defaultLogo from '../assets/arkanza-logo.jpg';
 
 interface FooterProps {
   onOpenAdminModal?: () => void;
+  brandingSettings?: BrandingSettings;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettings }) => {
+  const activeLogo = brandingSettings?.logoUrl || defaultLogo;
+  const brandName = brandingSettings?.brandName || 'ARKANZA';
+  const brandSubtitle = brandingSettings?.brandSubtitle || 'COFFEE & ROASTERY';
+  const shapeClass = brandingSettings?.logoShape === 'circle'
+    ? 'rounded-full'
+    : brandingSettings?.logoShape === 'square'
+    ? 'rounded-none'
+    : 'rounded-xl';
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -16,6 +27,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal }) => {
     { name: 'Promo Hari Ini', href: '#promo' },
     { name: 'Jam Operasional', href: '#hours' },
     { name: 'Catch Our Vibe', href: '#vibe' },
+    { name: 'Ulasan Pelanggan', href: '#testimonials' },
     { name: 'Contact & Location', href: '#contact' },
   ];
 
@@ -30,20 +42,20 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal }) => {
           <div className="md:col-span-5 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-3.5 mb-4">
-                <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#A98262]/60 shadow-md bg-black p-0.5 shrink-0 flex items-center justify-center">
+                <div className={`w-11 h-11 overflow-hidden border border-[#A98262]/60 shadow-md bg-black p-0.5 shrink-0 flex items-center justify-center ${shapeClass}`}>
                   <img
-                    src={arkanzaLogo}
-                    alt="Arkanza Coffee & Roastery Logo"
+                    src={activeLogo}
+                    alt={`${brandName} Logo`}
                     className="w-full h-full object-contain"
                     referrerPolicy="no-referrer"
                   />
                 </div>
                 <div>
                   <h3 className="font-serif italic text-lg font-bold tracking-wider text-white">
-                    ARKANZA
+                    {brandName}
                   </h3>
                   <span className="text-[9px] tracking-[0.25em] text-[#A98262] uppercase font-bold block">
-                    COFFEE &amp; ROASTERY
+                    {brandSubtitle}
                   </span>
                 </div>
               </div>
@@ -144,7 +156,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal }) => {
               <button
                 onClick={onOpenAdminModal}
                 id="btn-footer-admin-portal"
-                className="text-xs text-[#A98262] hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
+                className="hidden sm:flex text-xs text-[#A98262] hover:text-white items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Portal Kasir &amp; Data Customer (PIN)</span>

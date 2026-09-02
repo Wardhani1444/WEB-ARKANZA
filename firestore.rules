@@ -30,5 +30,8 @@ service cloud.firestore {
     match /site_settings/{settingId} {
       allow read, write: if true;
     }
+    match /theme_settings/{settingId} {
+      allow read, write: if true;
+    }
   }
 }

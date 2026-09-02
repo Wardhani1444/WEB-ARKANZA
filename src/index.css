@@ -14,7 +14,7 @@
 
 @layer base {
   html {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
     color: #111111;
     background-color: #F7F6F2;
     scroll-behavior: smooth;
@@ -22,7 +22,7 @@
 }
 
 .font-editorial {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
 }
 
 /* Custom scrollbar */

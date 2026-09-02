@@ -35,6 +35,7 @@ import {
   UploadCloud,
   RotateCcw,
   Sliders,
+  Type,
   Link as LinkIcon
 } from 'lucide-react';
 import { compressAndEncodeImage } from '../utils/imageUtils';
@@ -69,6 +70,8 @@ import {
   compressUploadedHeroImage,
   HeroPreset
 } from '../services/heroService';
+import { AdminFontManagerTab } from './AdminFontManagerTab';
+import { AdminBrandingManagerTab } from './AdminBrandingManagerTab';
 import arkanzaLogo from '../assets/arkanza-logo.jpg';
 
 interface AdminClaimsModalProps {
@@ -76,7 +79,7 @@ interface AdminClaimsModalProps {
   onClose: () => void;
   onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   customPromos?: PromoItem[];
-  initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero';
+  initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding';
 }
 
 // Preset photo options for quick visual selection
@@ -113,8 +116,8 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   onShowToast,
   initialTab = 'claims'
 }) => {
-  // Navigation tabs in Admin: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero'
-  const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero'>(initialTab);
+  // Navigation tabs in Admin: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding'
+  const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding'>(initialTab);
 
   // Sync initialTab if changed from parent
   useEffect(() => {
@@ -899,6 +902,31 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                 >
                   <Sliders className="w-4 h-4 text-amber-400" />
                   <span>Background &amp; Hero</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('manage_branding')}
+                  id="tab-btn-manage-branding"
+                  className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'manage_branding'
+                      ? 'border-rose-400 text-white'
+                      : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4 text-rose-400" />
+                  <span>Logo &amp; Brand</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('manage_fonts')}
+                  className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'manage_fonts'
+                      ? 'border-purple-400 text-white'
+                      : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <Type className="w-4 h-4 text-purple-400" />
+                  <span>Font &amp; Tipografi</span>
                 </button>
               </div>
 
@@ -2723,6 +2751,16 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                 </div>
               )}
 
+              {/* TAB 5: LOGO & IDENTITAS BRAND */}
+              {activeTab === 'manage_branding' && (
+                <AdminBrandingManagerTab onShowToast={onShowToast} />
+              )}
+
+              {/* TAB 6: FONT & TIPOGRAFI WEBSITE */}
+              {activeTab === 'manage_fonts' && (
+                <AdminFontManagerTab onShowToast={onShowToast} />
+              )}
+
               {/* FOOTER BAR */}
               <div className="px-5 py-3 border-t border-white/10 bg-black/60 flex items-center justify-between text-xs text-gray-400 shrink-0">
                 <div className="flex items-center gap-2">
@@ -2737,6 +2775,10 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                     ? `${vibePhotosList.length} Foto Galeri Tersimpan`
                     : activeTab === 'manage_hero'
                     ? `Background Hero Aktif`
+                    : activeTab === 'manage_branding'
+                    ? `Logo & Brand Identity Aktif`
+                    : activeTab === 'manage_fonts'
+                    ? `Tipografi Global Website Aktif`
                     : `${allCatalogPromos.filter(p => p.isActive).length} Tayang di Web (${allCatalogPromos.length} Total Promo)`}
                 </div>
               </div>

@@ -8,13 +8,13 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { PromosSection } from './components/PromosSection';
 import { PromoDetailModal } from './components/PromoDetailModal';
-import { CountdownPromo } from './components/CountdownPromo';
 import { VoucherClaimModal } from './components/VoucherClaimModal';
 import { ClaimedVouchersDrawer } from './components/ClaimedVouchersDrawer';
 import { AdminClaimsModal } from './components/AdminClaimsModal';
 import { HeroBackgroundCustomizerModal } from './components/HeroBackgroundCustomizerModal';
 import { OpeningHoursSection } from './components/OpeningHoursSection';
 import { CatchOurVibe } from './components/CatchOurVibe';
+import { TestimonialSection } from './components/TestimonialSection';
 import { LocationContact } from './components/LocationContact';
 import { Footer } from './components/Footer';
 import { Toast } from './components/Toast';
@@ -23,10 +23,12 @@ import { FloatingWhatsAppButton } from './components/FloatingWhatsAppButton';
 import { PROMO_ITEMS } from './data/promosData';
 import { VOUCHER_ITEMS } from './data/vouchersData';
 import { VIBE_PHOTOS } from './data/vibeData';
-import { PromoItem, VoucherItem, ToastNotification, CustomerData, VibePhoto, HeroSettings } from './types';
+import { PromoItem, VoucherItem, ToastNotification, CustomerData, VibePhoto, HeroSettings, FontSettings, BrandingSettings } from './types';
 import { subscribeToCustomPromos, subscribeToDisabledPromoIds, getLocalDisabledPromoIds } from './services/promoService';
 import { subscribeToVibePhotos, getLocalVibePhotos } from './services/vibeService';
 import { subscribeToHeroSettings, getLocalHeroSettings } from './services/heroService';
+import { subscribeToFontSettings, getLocalFontSettings, applyFontSettings } from './services/fontService';
+import { subscribeToBrandingSettings, getLocalBrandingSettings } from './services/brandingService';
 
 export default function App() {
   // Real-time custom promos from Firebase Firestore
@@ -37,9 +39,16 @@ export default function App() {
   const [vibePhotos, setVibePhotos] = useState<VibePhoto[]>(() => getLocalVibePhotos());
   // Real-time Hero Background and Headlines from Firebase / LocalStorage
   const [heroSettings, setHeroSettings] = useState<HeroSettings>(() => getLocalHeroSettings());
+  // Real-time Font settings from Firebase / LocalStorage
+  const [fontSettings, setFontSettings] = useState<FontSettings>(() => getLocalFontSettings());
+  // Real-time Logo & Brand settings from Firebase / LocalStorage
+  const [brandingSettings, setBrandingSettings] = useState<BrandingSettings>(() => getLocalBrandingSettings());
 
-  // Listen to custom promos, disabled promo settings, vibe photos & hero background from Firestore
+  // Listen to custom promos, disabled promo settings, vibe photos, hero background & fonts from Firestore
   useEffect(() => {
+    // Initial font application
+    applyFontSettings(getLocalFontSettings());
+
     const unsubscribePromos = subscribeToCustomPromos((promos) => {
       setCustomPromos(promos);
     });
@@ -52,11 +61,20 @@ export default function App() {
     const unsubscribeHero = subscribeToHeroSettings((settings) => {
       setHeroSettings(settings);
     });
+    const unsubscribeFont = subscribeToFontSettings((settings) => {
+      setFontSettings(settings);
+      applyFontSettings(settings);
+    });
+    const unsubscribeBranding = subscribeToBrandingSettings((settings) => {
+      setBrandingSettings(settings);
+    });
     return () => {
       unsubscribePromos();
       unsubscribeDisabled();
       unsubscribeVibe();
       unsubscribeHero();
+      unsubscribeFont();
+      unsubscribeBranding();
     };
   }, []);
 
@@ -116,7 +134,7 @@ export default function App() {
   const [claimedVoucherModalItem, setClaimedVoucherModalItem] = useState<VoucherItem | null>(null);
   const [isClaimedDrawerOpen, setIsClaimedDrawerOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [adminInitialTab, setAdminInitialTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero'>('claims');
+  const [adminInitialTab, setAdminInitialTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding'>('claims');
   const [isHeroCustomizerOpen, setIsHeroCustomizerOpen] = useState(false);
 
   // Copy state & Toasts
@@ -207,12 +225,6 @@ export default function App() {
     showToast(`🎉 Halo ${customerData.name}! Voucher ${voucher.discountTag} berhasil tersimpan ke database Arkanza.`);
   };
 
-  // Flash promo claim
-  const handleClaimFlashPromo = () => {
-    const flashVoucher = allVouchers[0]; // First active voucher
-    handleClaimVoucher(flashVoucher);
-  };
-
   // Smooth scroll navigation helpers
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -234,6 +246,7 @@ export default function App() {
         claimedCount={claimedCodes.length}
         onOpenClaimedModal={() => setIsClaimedDrawerOpen(true)}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
+        brandingSettings={brandingSettings}
       />
 
       {/* 1. Hero Section (Dark, Warm, Earthy) */}
@@ -251,13 +264,13 @@ export default function App() {
         claimedCodes={claimedCodes}
       />
 
-      {/* 3. Countdown Promo Section (Dark) */}
-      <CountdownPromo onClaimFlashPromo={handleClaimFlashPromo} />
+      {/* 3. Customer Reviews & Testimonials Carousel (Dark) */}
+      <TestimonialSection />
 
       {/* 4. Opening Hours & Live Open Status (Light) */}
       <OpeningHoursSection />
 
-      {/* 6. Catch Our Vibe - Instagram Grid (Dark) with Real-Time Firestore Sync */}
+      {/* 5. Catch Our Vibe - Instagram Grid (Dark) with Real-Time Firestore Sync */}
       <CatchOurVibe
         photos={vibePhotos}
         onOpenGalleryManager={() => {
@@ -266,15 +279,16 @@ export default function App() {
         }}
       />
 
-      {/* 7. Find Us & Location (Light) */}
+      {/* 6. Find Us & Location (Light) */}
       <LocationContact />
 
-      {/* 8. Footer (Dark) */}
+      {/* 7. Footer (Dark) */}
       <Footer
         onOpenAdminModal={() => {
           setAdminInitialTab('claims');
           setIsAdminModalOpen(true);
         }}
+        brandingSettings={brandingSettings}
       />
 
       {/* Floating WhatsApp Quick Table Booking */}
@@ -316,6 +330,7 @@ export default function App() {
         isAlreadyClaimed={claimedVoucherModalItem ? claimedCodes.includes(claimedVoucherModalItem.code) : false}
         onCopyCode={handleCopyCode}
         isCopied={claimedVoucherModalItem ? copiedCode === claimedVoucherModalItem.code : false}
+        brandingSettings={brandingSettings}
       />
 
       {/* Saved / Claimed Vouchers Drawer */}

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Copy, Sparkles, Store, ShieldCheck, User, Phone, Mail, Loader2, CloudCheck } from 'lucide-react';
-import { VoucherItem, CustomerData } from '../types';
-import arkanzaLogo from '../assets/arkanza-logo.jpg';
+import { VoucherItem, CustomerData, BrandingSettings } from '../types';
+import defaultLogo from '../assets/arkanza-logo.jpg';
 import { savePromoClaimToFirebase } from '../services/promoClaimService';
 
 interface VoucherClaimModalProps {
@@ -12,6 +12,7 @@ interface VoucherClaimModalProps {
   isAlreadyClaimed: boolean;
   onCopyCode: (code: string) => void;
   isCopied: boolean;
+  brandingSettings?: BrandingSettings;
 }
 
 export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
@@ -21,7 +22,17 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
   isAlreadyClaimed,
   onCopyCode,
   isCopied,
+  brandingSettings,
 }) => {
+  const activeLogo = brandingSettings?.logoUrl || defaultLogo;
+  const brandName = brandingSettings?.brandName || 'ARKANZA';
+  const brandSubtitle = brandingSettings?.brandSubtitle || 'COFFEE & ROASTERY';
+  const shapeClass = brandingSettings?.logoShape === 'circle'
+    ? 'rounded-full'
+    : brandingSettings?.logoShape === 'square'
+    ? 'rounded-none'
+    : 'rounded-xl';
+
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -155,17 +166,17 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
 
           {/* Top Logo & Branding */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#A98262] bg-black p-0.5 shrink-0 shadow-lg flex items-center justify-center">
+            <div className={`w-12 h-12 overflow-hidden border border-[#A98262] bg-black p-0.5 shrink-0 shadow-lg flex items-center justify-center ${shapeClass}`}>
               <img
-                src={arkanzaLogo}
-                alt="Arkanza Coffee Logo"
+                src={activeLogo}
+                alt={`${brandName} Logo`}
                 className="w-full h-full object-contain"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#A98262]">
-                ARKANZA COFFEE &amp; ROASTERY
+                {brandName} {brandSubtitle ? `• ${brandSubtitle}` : ''}
               </span>
               <h3 className="font-serif italic text-lg sm:text-xl font-bold text-white leading-tight">
                 {showSuccessView ? 'Voucher Siap Digunakan!' : 'Klaim Promo & Voucher'}

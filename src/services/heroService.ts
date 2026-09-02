@@ -13,8 +13,8 @@ const LOCAL_STORAGE_HERO_KEY = 'arkanza_hero_settings_cache';
 export const DEFAULT_HERO_SETTINGS: HeroSettings = {
   backgroundImage: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=2000&q=85',
   tagline: '☕ WORKING FEELS BETTER WITH COFFEE',
-  headlineMain: 'Good Coffee,',
-  headlineAccent: 'Better Moments.',
+  headlineMain: 'Happiness',
+  headlineAccent: 'for All.',
   subheadline: 'Nikmati kopi pilihan, signature drinks, dan suasana nyaman di Arkanza Coffee & Roastery.',
   overlayOpacity: 0.35,
   updatedAt: new Date().toISOString()
@@ -94,10 +94,16 @@ export function getLocalHeroSettings(): HeroSettings {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && typeof parsed === 'object' && parsed.backgroundImage) {
-        return {
+        const item = {
           ...DEFAULT_HERO_SETTINGS,
           ...parsed
         };
+        // Migrate old default headline if present in local storage
+        if (item.headlineMain === 'Good Coffee,' && item.headlineAccent === 'Better Moments.') {
+          item.headlineMain = 'Happiness';
+          item.headlineAccent = 'for All.';
+        }
+        return item;
       }
     }
   } catch (err) {

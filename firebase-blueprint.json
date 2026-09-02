@@ -95,6 +95,19 @@
         "overlayOpacity": { "type": "number" },
         "updatedAt": { "type": "string" }
       }
+    },
+    "theme_settings": {
+      "title": "Theme Font Settings",
+      "description": "Configuration for website typography and font settings",
+      "type": "object",
+      "properties": {
+        "headingFont": { "type": "string" },
+        "bodyFont": { "type": "string" },
+        "headingCategory": { "type": "string" },
+        "bodyCategory": { "type": "string" },
+        "presetId": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
     }
   },
   "firestore": {
@@ -123,6 +136,14 @@
       }
     },
     "/hero_settings/{settingId}": {
+      "allow": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
+    },
+    "/theme_settings/{settingId}": {
       "allow": {
         "read": "true",
         "create": "true",
