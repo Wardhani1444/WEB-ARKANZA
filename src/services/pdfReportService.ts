@@ -5,6 +5,7 @@ import { StoredPromoClaim } from './promoClaimService';
 export interface ReportOptions {
   statusFilter?: 'all' | 'active' | 'redeemed';
   generatedBy?: string;
+  dateRangeLabel?: string;
 }
 
 /**
@@ -101,42 +102,44 @@ export function generateInvoiceReportPdf(
   doc.text('WhatsApp: +62 822-4545-8495 | Web: arkanzacoffee.com', margin, currentY);
 
   // Right: Document Metadata Box (Like an Official Invoice)
-  const metaBoxWidth = 72;
+  const metaBoxWidth = 76;
   const metaBoxX = pageWidth - margin - metaBoxWidth;
-  const metaBoxY = 12;
+  const metaBoxY = 11;
 
   doc.setFillColor(248, 246, 242);
   doc.setDrawColor(218, 210, 198);
-  doc.roundedRect(metaBoxX, metaBoxY, metaBoxWidth, 27, 2, 2, 'FD');
+  doc.roundedRect(metaBoxX, metaBoxY, metaBoxWidth, 31, 2, 2, 'FD');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(9.5);
   doc.setTextColor(31, 77, 58);
   doc.text('LAPORAN REKAPITULASI KLAIM', metaBoxX + 4, metaBoxY + 5.5);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(90, 90, 90);
-  doc.text('No. Dokumen', metaBoxX + 4, metaBoxY + 10.5);
-  doc.text('Tanggal Cetak', metaBoxX + 4, metaBoxY + 15);
-  doc.text('Status Filter', metaBoxX + 4, metaBoxY + 19.5);
-  doc.text('Operator Kasir', metaBoxX + 4, metaBoxY + 24);
+  doc.text('No. Dokumen', metaBoxX + 4, metaBoxY + 10);
+  doc.text('Tanggal Cetak', metaBoxX + 4, metaBoxY + 14.5);
+  doc.text('Rentang Waktu', metaBoxX + 4, metaBoxY + 19);
+  doc.text('Status Filter', metaBoxX + 4, metaBoxY + 23.5);
+  doc.text('Operator Kasir', metaBoxX + 4, metaBoxY + 28);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 30, 30);
-  doc.text(`: ${docNumber}`, metaBoxX + 23, metaBoxY + 10.5);
-  doc.text(`: ${datePrintStr}`, metaBoxX + 23, metaBoxY + 15);
+  doc.text(`: ${docNumber}`, metaBoxX + 24, metaBoxY + 10);
+  doc.text(`: ${datePrintStr}`, metaBoxX + 24, metaBoxY + 14.5);
+  doc.text(`: ${options.dateRangeLabel || 'Semua Waktu'}`, metaBoxX + 24, metaBoxY + 19);
   
   const filterLabel = options.statusFilter === 'active' 
     ? 'Hanya Voucher Aktif' 
     : options.statusFilter === 'redeemed' 
     ? 'Hanya Sudah Digunakan' 
     : 'Semua Status';
-  doc.text(`: ${filterLabel}`, metaBoxX + 23, metaBoxY + 19.5);
-  doc.text(`: ${options.generatedBy || 'Admin & Kasir'}`, metaBoxX + 23, metaBoxY + 24);
+  doc.text(`: ${filterLabel}`, metaBoxX + 24, metaBoxY + 23.5);
+  doc.text(`: ${options.generatedBy || 'Admin & Kasir'}`, metaBoxX + 24, metaBoxY + 28);
 
   // Divider Line
-  currentY = 43;
+  currentY = 46;
   doc.setDrawColor(220, 215, 205);
   doc.setLineWidth(0.5);
   doc.line(margin, currentY, pageWidth - margin, currentY);
@@ -174,7 +177,11 @@ export function generateInvoiceReportPdf(
   // 4. TABLE SECTION (INVOICE ITEMIZED TABLE)
   const tableData = claims.map((c, index) => {
     const statusText = c.status === 'redeemed' ? 'SUDAH DIGUNAKAN' : 'AKTIF';
-    const customerInfo = `${c.customerName || '-'}\nWA: ${c.customerPhone || '-'}`;
+    const extraInfo = [
+      c.customerSocialMedia ? `Sosmed: ${c.customerSocialMedia}` : '',
+      c.customerDomicile ? `Domisili: ${c.customerDomicile}` : ''
+    ].filter(Boolean).join('\n');
+    const customerInfo = `${c.customerName || '-'}\nWA: ${c.customerPhone || '-'}${extraInfo ? `\n${extraInfo}` : ''}`;
     const promoDetail = `${c.promoTitle || '-'}\n[${c.discountTag || '-'}]`;
     const redeemInfo = c.status === 'redeemed' && c.redeemedAt ? formatDateCompact(c.redeemedAt) : '-';
 

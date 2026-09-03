@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Flame, Clock, Sparkles, ArrowRight } from 'lucide-react';
+import { triggerHapticFeedback } from '../utils/haptics';
 
 interface CountdownPromoProps {
   onClaimFlashPromo: () => void;
@@ -121,7 +122,10 @@ export const CountdownPromo: React.FC<CountdownPromoProps> = ({ onClaimFlashProm
                 Diskon 20% + Free Upgrade Oat Milk
               </p>
               <button
-                onClick={onClaimFlashPromo}
+                onClick={() => {
+                  triggerHapticFeedback('light');
+                  onClaimFlashPromo();
+                }}
                 id="btn-claim-flash-deal"
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded bg-[#1F4D3A] hover:bg-[#163A2C] text-white font-bold text-xs tracking-wider uppercase shadow-md transition-all active:scale-95 cursor-pointer"
               >

@@ -29,6 +29,7 @@ import { subscribeToVibePhotos, getLocalVibePhotos } from './services/vibeServic
 import { subscribeToHeroSettings, getLocalHeroSettings } from './services/heroService';
 import { subscribeToFontSettings, getLocalFontSettings, applyFontSettings } from './services/fontService';
 import { subscribeToBrandingSettings, getLocalBrandingSettings } from './services/brandingService';
+import { triggerHapticFeedback } from './utils/haptics';
 
 export default function App() {
   // Real-time custom promos from Firebase Firestore
@@ -193,11 +194,13 @@ export default function App() {
 
   // Claim voucher action - opens modal with customer data form
   const handleClaimVoucher = (voucher: VoucherItem) => {
+    triggerHapticFeedback('light');
     setClaimedVoucherModalItem(voucher);
   };
 
   // Quick claim from promo card / modal
   const handleClaimPromo = (promo: PromoItem) => {
+    triggerHapticFeedback('light');
     const matchingVoucher = allVouchers.find((v) => v.code === promo.code) || {
       id: promo.id,
       code: promo.code,
@@ -219,6 +222,7 @@ export default function App() {
 
   // Callback when claim is successfully verified & saved to Firebase
   const handleSuccessClaim = (voucher: VoucherItem, customerData: CustomerData) => {
+    triggerHapticFeedback('success');
     if (!claimedCodes.includes(voucher.code)) {
       setClaimedCodes((prev) => [...prev, voucher.code]);
     }

@@ -5,6 +5,8 @@ export interface CustomerClaimInput {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
+  customerSocialMedia?: string;
+  customerDomicile?: string;
   promoId: string;
   promoCode: string;
   promoTitle: string;
@@ -31,6 +33,8 @@ export async function savePromoClaimToFirebase(data: CustomerClaimInput): Promis
       customerName: data.customerName.trim(),
       customerPhone: data.customerPhone.trim(),
       customerEmail: data.customerEmail?.trim() || '',
+      customerSocialMedia: data.customerSocialMedia?.trim() || '',
+      customerDomicile: data.customerDomicile?.trim() || '',
       promoId: data.promoId,
       promoCode: data.promoCode,
       promoTitle: data.promoTitle,

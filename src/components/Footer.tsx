@@ -1,5 +1,6 @@
 import React from 'react';
-import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck, Music2 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck, Music2, UtensilsCrossed } from 'lucide-react';
 import { BrandingSettings } from '../types';
 import defaultLogo from '../assets/arkanza-logo.jpg';
 
@@ -33,7 +34,13 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
 
   return (
     <footer className="bg-[#111111] text-[#F7F6F2] pt-16 pb-12 border-t border-white/10 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
         
         {/* Main Footer Row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 border-b border-white/10">
@@ -69,7 +76,19 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
               </p>
             </div>
 
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex items-center flex-wrap gap-3 mt-6">
+              <a
+                href="https://gofood.co.id/surabaya/restaurant/arkanza-coffee-and-roastery-96b124bb-eca7-4897-a775-77512ee9ef75"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-9 px-3 rounded-lg bg-[#EE2737]/20 border border-[#EE2737]/40 hover:bg-[#EE2737] flex items-center gap-1.5 text-white transition-all text-xs font-bold group shadow-xs cursor-pointer"
+                aria-label="Order via GoFood"
+                title="Pesan Online di GoFood"
+              >
+                <UtensilsCrossed className="w-3.5 h-3.5 text-[#EE2737] group-hover:text-white transition-colors" />
+                <span>GoFood</span>
+              </a>
+
               <a
                 href="https://www.instagram.com/arkanzacoffeeandroastery/"
                 target="_blank"
@@ -168,7 +187,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
           </div>
         </div>
 
-      </div>
+      </motion.div>
     </footer>
   );
 };

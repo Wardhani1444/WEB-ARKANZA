@@ -65,6 +65,8 @@ export interface CustomerData {
   name: string;
   phone: string;
   email?: string;
+  socialMedia?: string;
+  domicile?: string;
 }
 
 export interface ToastNotification {

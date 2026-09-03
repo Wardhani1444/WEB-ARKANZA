@@ -38,8 +38,14 @@ export const OpeningHoursSection: React.FC = () => {
     <section id="hours" className="py-20 sm:py-24 bg-[#F7F6F2] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Card */}
-        <div className="bg-white rounded p-6 sm:p-10 border border-black/10 shadow-lg max-w-4xl mx-auto relative overflow-hidden">
+        {/* Section Card with Fade-In Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-white rounded p-6 sm:p-10 border border-black/10 shadow-lg max-w-4xl mx-auto relative overflow-hidden"
+        >
           
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8 pb-6 border-b border-black/10">
             <div>
@@ -130,7 +136,7 @@ export const OpeningHoursSection: React.FC = () => {
 
           </div>
 
-        </div>
+        </motion.div>
 
       </div>
     </section>

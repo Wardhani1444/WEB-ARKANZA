@@ -308,24 +308,18 @@ export const HeroBackgroundCustomizerModal: React.FC<HeroBackgroundCustomizerMod
                         setUploadError('URL gambar tidak dapat dimuat. Pastikan link dapat diakses secara publik.');
                       }}
                     />
-                    {/* Dark gradient overlay matching Hero */}
-                    <div
-                      className="absolute inset-0 bg-black"
-                      style={{ opacity: overlayOpacity }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-[#111111]/80" />
 
                     {/* Content in Preview */}
                     <div className="relative z-10 px-4 max-w-lg mx-auto pointer-events-none">
                       {tagline && (
-                        <div className="inline-block mb-1.5 px-2.5 py-0.5 bg-[#1F4D3A] text-[10px] font-bold tracking-widest uppercase text-white rounded">
+                        <div className="inline-block mb-1.5 px-2.5 py-0.5 bg-[#1F4D3A] text-[10px] font-bold tracking-widest uppercase text-white rounded shadow">
                           {tagline}
                         </div>
                       )}
-                      <h2 className="font-serif italic text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight mb-1">
+                      <h2 className="font-serif italic text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight mb-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                         {headlineMain} <span className="text-[#A98262]">{headlineAccent}</span>
                       </h2>
-                      <p className="text-[11px] text-white/80 line-clamp-2 max-w-sm mx-auto">
+                      <p className="text-[11px] text-white/90 line-clamp-2 max-w-sm mx-auto drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
                         {subheadline}
                       </p>
                     </div>

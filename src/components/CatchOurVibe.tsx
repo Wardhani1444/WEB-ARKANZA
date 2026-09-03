@@ -21,8 +21,14 @@ export const CatchOurVibe: React.FC<CatchOurVibeProps> = ({ photos, onOpenGaller
     <section id="vibe" className="py-20 sm:py-28 bg-[#111111] text-[#F7F6F2] relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12">
+        {/* Section Header with Fade-In Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12"
+        >
           <div>
             <div className="inline-block mb-2 px-3 py-1 bg-[#1F4D3A] text-white text-[10px] font-bold tracking-widest uppercase rounded">
               <span>VISUAL STORIES</span>
@@ -41,7 +47,7 @@ export const CatchOurVibe: React.FC<CatchOurVibeProps> = ({ photos, onOpenGaller
               <span>Galeri Arkanza</span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Gallery Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
@@ -49,10 +55,10 @@ export const CatchOurVibe: React.FC<CatchOurVibeProps> = ({ photos, onOpenGaller
             return (
               <motion.div
                 key={photo.id}
-                initial={{ opacity: 0, y: 25 }}
+                initial={{ opacity: 0, y: 28 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.4, delay: index * 0.08 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
                 className="group relative rounded-2xl overflow-hidden aspect-square bg-[#163A2C]/30 border border-white/10 shadow-lg block select-none"
               >
                 {/* Image */}

@@ -36,7 +36,9 @@ import {
   RotateCcw,
   Sliders,
   Type,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Instagram,
+  MapPin
 } from 'lucide-react';
 import { compressAndEncodeImage } from '../utils/imageUtils';
 import { StoredPromoClaim, subscribeToClaims, updateClaimStatus, getAllClaims } from '../services/promoClaimService';
@@ -139,6 +141,11 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'redeemed'>('all');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Date Range Filter State for Claims & Invoice PDF
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | '7days' | '30days' | 'this_month' | 'custom'>('all');
+  const [startDate, setStartDate] = useState<string>(''); // YYYY-MM-DD
+  const [endDate, setEndDate] = useState<string>('');   // YYYY-MM-DD
 
   // Custom Promos & Disabled Promos State
   const [firestorePromos, setFirestorePromos] = useState<PromoItem[]>([]);
@@ -636,25 +643,57 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
     return `"${str.replace(/"/g, '""')}"`;
   };
 
-  // Export to Invoice-style PDF Report
-  const handleExportPDF = () => {
-    if (claims.length === 0) {
-      onShowToast('Belum ada data customer untuk diekspor ke PDF', 'info');
-      return;
-    }
+  // Handle Date Preset Selection
+  const handleDatePresetChange = (preset: 'all' | 'today' | '7days' | '30days' | 'this_month' | 'custom') => {
+    setDatePreset(preset);
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const formatYMD = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-    try {
-      const dataToExport = filteredClaims.length > 0 ? filteredClaims : claims;
-      generateInvoiceReportPdf(dataToExport, {
-        statusFilter,
-        generatedBy: 'Admin & Kasir Roastery'
-      });
-      onShowToast(`Laporan Rekapitulasi Invoice (${dataToExport.length} data) berhasil diunduh sebagai PDF!`, 'success');
-    } catch (err) {
-      console.error('Error exporting PDF:', err);
-      onShowToast('Gagal membuat dokumen PDF', 'error');
+    if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+    } else if (preset === 'today') {
+      const todayStr = formatYMD(now);
+      setStartDate(todayStr);
+      setEndDate(todayStr);
+    } else if (preset === '7days') {
+      const past = new Date(now);
+      past.setDate(past.getDate() - 6);
+      setStartDate(formatYMD(past));
+      setEndDate(formatYMD(now));
+    } else if (preset === '30days') {
+      const past = new Date(now);
+      past.setDate(past.getDate() - 29);
+      setStartDate(formatYMD(past));
+      setEndDate(formatYMD(now));
+    } else if (preset === 'this_month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setStartDate(formatYMD(firstDay));
+      setEndDate(formatYMD(lastDay));
     }
   };
+
+  // Human-readable date range label for UI and Invoice PDF
+  const dateRangeLabel = useMemo(() => {
+    if (!startDate && !endDate) return 'Semua Waktu';
+
+    const formatDateID = (ymd: string) => {
+      const [y, m, d] = ymd.split('-');
+      if (!y || !m || !d) return ymd;
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
+    };
+
+    if (startDate && endDate) {
+      if (startDate === endDate) return formatDateID(startDate);
+      return `${formatDateID(startDate)} - ${formatDateID(endDate)}`;
+    }
+    if (startDate) return `Sejak ${formatDateID(startDate)}`;
+    if (endDate) return `Hingga ${formatDateID(endDate)}`;
+    return 'Semua Waktu';
+  }, [startDate, endDate]);
 
   // Helper for WhatsApp Chat Click
   const getWhatsAppLink = (phone: string, name: string) => {
@@ -668,10 +707,13 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
     return `https://wa.me/${cleanPhone}?text=${text}`;
   };
 
-  // Filtered Claims
+  // Filtered Claims (Status, Search query, and Date Range)
   const filteredClaims = useMemo(() => {
     return claims.filter((claim) => {
+      // 1. Status Filter
       const matchesStatus = statusFilter === 'all' ? true : claim.status === statusFilter;
+
+      // 2. Search Query Filter
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
@@ -679,11 +721,60 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
         claim.customerPhone.toLowerCase().includes(q) ||
         claim.promoCode.toLowerCase().includes(q) ||
         claim.promoTitle.toLowerCase().includes(q) ||
+        (claim.customerSocialMedia && claim.customerSocialMedia.toLowerCase().includes(q)) ||
+        (claim.customerDomicile && claim.customerDomicile.toLowerCase().includes(q)) ||
         (claim.customerEmail && claim.customerEmail.toLowerCase().includes(q));
 
-      return matchesStatus && matchesSearch;
+      // 3. Date Range Filter
+      let matchesDate = true;
+      if (startDate || endDate) {
+        if (!claim.claimedAt) {
+          matchesDate = false;
+        } else {
+          const claimDate = new Date(claim.claimedAt);
+          if (isNaN(claimDate.getTime())) {
+            matchesDate = false;
+          } else {
+            if (startDate) {
+              const start = new Date(`${startDate}T00:00:00`);
+              if (claimDate < start) matchesDate = false;
+            }
+            if (endDate) {
+              const end = new Date(`${endDate}T23:59:59.999`);
+              if (claimDate > end) matchesDate = false;
+            }
+          }
+        }
+      }
+
+      return matchesStatus && matchesSearch && matchesDate;
     });
-  }, [claims, statusFilter, searchQuery]);
+  }, [claims, statusFilter, searchQuery, startDate, endDate]);
+
+  // Export to Invoice-style PDF Report with Date Range Filter
+  const handleExportPDF = () => {
+    if (claims.length === 0) {
+      onShowToast('Belum ada data customer untuk diekspor ke PDF', 'info');
+      return;
+    }
+
+    if (filteredClaims.length === 0) {
+      onShowToast(`Tidak ada data klaim promo pada rentang waktu [${dateRangeLabel}] untuk diekspor ke PDF`, 'info');
+      return;
+    }
+
+    try {
+      generateInvoiceReportPdf(filteredClaims, {
+        statusFilter,
+        dateRangeLabel,
+        generatedBy: 'Admin & Kasir Roastery'
+      });
+      onShowToast(`Laporan Invoice [${dateRangeLabel}] (${filteredClaims.length} data) berhasil diunduh sebagai PDF!`, 'success');
+    } catch (err) {
+      console.error('Error exporting PDF:', err);
+      onShowToast('Gagal membuat dokumen PDF', 'error');
+    }
+  };
 
   // Statistics
   const stats = useMemo(() => {
@@ -1031,12 +1122,123 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                       <button
                         onClick={handleExportPDF}
                         className="px-3.5 py-2.5 rounded-xl bg-[#1F4D3A] hover:bg-[#16382a] text-white text-xs font-bold uppercase tracking-wider border border-[#C5A880]/50 transition-all flex items-center gap-2 shadow-lg shadow-black/40 hover:scale-[1.02] active:scale-95 cursor-pointer"
-                        title="Download Dokumen Laporan / Invoice PDF"
+                        title={`Download Invoice PDF (${dateRangeLabel})`}
                       >
                         <FileText className="w-4 h-4 text-[#C5A880]" />
                         <span className="hidden sm:inline">Download Invoice PDF</span>
                         <span className="sm:hidden">PDF</span>
+                        {filteredClaims.length > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-md text-[10px] bg-[#C5A880] text-black font-bold font-mono">
+                            {filteredClaims.length}
+                          </span>
+                        )}
                       </button>
+                    </div>
+                  </div>
+
+                  {/* DATE RANGE FILTER TOOLBAR */}
+                  <div className="px-4 sm:px-5 py-2.5 bg-[#171717] border-b border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 text-xs">
+                    {/* Presets */}
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <div className="flex items-center gap-1.5 text-gray-400 font-semibold mr-1 shrink-0">
+                        <Calendar className="w-3.5 h-3.5 text-[#C5A880]" />
+                        <span className="text-[11px] uppercase tracking-wider text-[#A98262]">Rentang Waktu:</span>
+                      </div>
+                      <button
+                        onClick={() => handleDatePresetChange('all')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                          datePreset === 'all'
+                            ? 'bg-[#C5A880] text-[#121212] shadow-xs'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        Semua Waktu
+                      </button>
+                      <button
+                        onClick={() => handleDatePresetChange('today')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                          datePreset === 'today'
+                            ? 'bg-[#C5A880] text-[#121212] shadow-xs'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        Hari Ini
+                      </button>
+                      <button
+                        onClick={() => handleDatePresetChange('7days')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                          datePreset === '7days'
+                            ? 'bg-[#C5A880] text-[#121212] shadow-xs'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        7 Hari
+                      </button>
+                      <button
+                        onClick={() => handleDatePresetChange('30days')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                          datePreset === '30days'
+                            ? 'bg-[#C5A880] text-[#121212] shadow-xs'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        30 Hari
+                      </button>
+                      <button
+                        onClick={() => handleDatePresetChange('this_month')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                          datePreset === 'this_month'
+                            ? 'bg-[#C5A880] text-[#121212] shadow-xs'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/5'
+                        }`}
+                      >
+                        Bulan Ini
+                      </button>
+                    </div>
+
+                    {/* Custom Date Range Picker & Reset */}
+                    <div className="flex items-center flex-wrap gap-2">
+                      <div className="flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-lg px-2.5 py-1">
+                        <span className="text-[10px] text-gray-400 font-semibold">Dari:</span>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => {
+                            setStartDate(e.target.value);
+                            setDatePreset('custom');
+                          }}
+                          className="bg-transparent text-[11px] text-white focus:outline-none [color-scheme:dark] cursor-pointer"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-1.5 bg-black/50 border border-white/10 rounded-lg px-2.5 py-1">
+                        <span className="text-[10px] text-gray-400 font-semibold">Sampai:</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => {
+                            setEndDate(e.target.value);
+                            setDatePreset('custom');
+                          }}
+                          className="bg-transparent text-[11px] text-white focus:outline-none [color-scheme:dark] cursor-pointer"
+                        />
+                      </div>
+
+                      {(startDate || endDate) && (
+                        <button
+                          onClick={() => handleDatePresetChange('all')}
+                          className="px-2 py-1 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-300 border border-red-500/30 text-[10px] font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                          title="Reset Rentang Waktu"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Reset</span>
+                        </button>
+                      )}
+
+                      <div className="hidden lg:flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                        <span>{dateRangeLabel}</span>
+                        <span className="text-gray-400">({filteredClaims.length} klaim)</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1052,10 +1254,23 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                         <Tag className="w-10 h-10 mx-auto text-gray-600 mb-2" />
                         <h4 className="text-sm font-bold text-white mb-1">Tidak ada data klaim promo</h4>
                         <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                          {searchQuery
-                            ? 'Tidak ada data customer yang cocok dengan pencarian kata kunci di atas.'
+                          {searchQuery || startDate || endDate
+                            ? `Tidak ada data klaim yang cocok dengan filter aktif (${dateRangeLabel}${statusFilter !== 'all' ? `, status: ${statusFilter}` : ''}).`
                             : 'Belum ada customer yang mengklaim voucher saat ini. Data yang masuk akan otomatis tampil di sini secara real-time.'}
                         </p>
+                        {(startDate || endDate || searchQuery || statusFilter !== 'all') && (
+                          <button
+                            onClick={() => {
+                              handleDatePresetChange('all');
+                              setSearchQuery('');
+                              setStatusFilter('all');
+                            }}
+                            className="mt-3 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-white text-xs font-medium transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-[#C5A880]" />
+                            <span>Reset Semua Filter</span>
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <div className="space-y-3">
@@ -1095,11 +1310,25 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                                         </div>
                                         <div>
                                           <span>{claim.customerName}</span>
-                                          {claim.customerEmail && (
-                                            <span className="block text-[10px] text-gray-500 font-normal">
-                                              {claim.customerEmail}
-                                            </span>
-                                          )}
+                                          <div className="flex flex-col gap-0.5 mt-0.5">
+                                            {claim.customerSocialMedia && (
+                                              <span className="text-[10px] text-pink-400 font-normal flex items-center gap-1">
+                                                <Instagram className="w-2.5 h-2.5 shrink-0" />
+                                                <span className="truncate max-w-[130px]">{claim.customerSocialMedia}</span>
+                                              </span>
+                                            )}
+                                            {claim.customerDomicile && (
+                                              <span className="text-[10px] text-amber-300 font-normal flex items-center gap-1">
+                                                <MapPin className="w-2.5 h-2.5 shrink-0" />
+                                                <span className="truncate max-w-[130px]">{claim.customerDomicile}</span>
+                                              </span>
+                                            )}
+                                            {!claim.customerSocialMedia && !claim.customerDomicile && claim.customerEmail && (
+                                              <span className="block text-[10px] text-gray-500 font-normal">
+                                                {claim.customerEmail}
+                                              </span>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
                                     </td>
@@ -2476,11 +2705,6 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                           alt="Hero Live Preview"
                           className="absolute inset-0 w-full h-full object-cover object-center"
                         />
-                        <div
-                          className="absolute inset-0 bg-black transition-opacity"
-                          style={{ opacity: heroOverlayOpacity }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#111111] via-transparent to-[#111111]/80" />
 
                         <div className="relative z-10 px-4 max-w-lg mx-auto pointer-events-none">
                           {heroTagline && (
@@ -2488,10 +2712,10 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                               {heroTagline}
                             </div>
                           )}
-                          <h2 className="font-serif italic text-lg sm:text-2xl font-bold tracking-tight text-white leading-tight mb-1">
+                          <h2 className="font-serif italic text-lg sm:text-2xl font-bold tracking-tight text-white leading-tight mb-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                             {heroHeadlineMain} <span className="text-[#A98262]">{heroHeadlineAccent}</span>
                           </h2>
-                          <p className="text-[11px] text-gray-300 line-clamp-2 max-w-sm mx-auto">
+                          <p className="text-[11px] text-gray-200 line-clamp-2 max-w-sm mx-auto drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]">
                             {heroSubheadline}
                           </p>
                         </div>

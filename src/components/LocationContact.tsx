@@ -1,14 +1,20 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Instagram, ExternalLink, Clock, Navigation, Share2, MessageSquare, Sparkles, Music2 } from 'lucide-react';
+import { MapPin, Phone, Instagram, ExternalLink, Clock, Navigation, Share2, MessageSquare, Sparkles, Music2, UtensilsCrossed } from 'lucide-react';
 
 export const LocationContact: React.FC = () => {
   return (
     <section id="contact" className="py-20 sm:py-28 bg-[#F7F6F2] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
+        {/* Section Header with Fade-In Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center max-w-2xl mx-auto mb-12"
+        >
           <div className="inline-block mb-2 px-3 py-1 bg-[#1F4D3A] text-white text-[10px] font-bold tracking-widest uppercase rounded">
             <span>STORE LOCATION &amp; CONTACT</span>
           </div>
@@ -18,10 +24,16 @@ export const LocationContact: React.FC = () => {
           <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
             Kunjungi outlet Arkanza Coffee &amp; Roastery untuk merasakan pengalaman seduhan kopi terbaik dan suasana yang nyaman.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Location & Map Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        {/* Location & Map Grid with Fade-In Animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.75, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch"
+        >
           
           {/* Contact Details & Info Card */}
           <div className="lg:col-span-5 bg-white rounded p-6 sm:p-8 border-l-4 border-[#1F4D3A] shadow-md flex flex-col justify-between">
@@ -53,8 +65,28 @@ export const LocationContact: React.FC = () => {
               {/* Contact Links */}
               <div className="space-y-3">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 block">
-                  HUBUNGI KAMI &amp; RESERVASI
+                  HUBUNGI KAMI, ORDER &amp; RESERVASI
                 </span>
+
+                {/* GoFood Online Delivery */}
+                <a
+                  href="https://gofood.co.id/surabaya/restaurant/arkanza-coffee-and-roastery-96b124bb-eca7-4897-a775-77512ee9ef75"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  id="btn-order-gofood"
+                  className="flex items-center justify-between p-3.5 rounded-xl bg-[#EE2737]/10 hover:bg-[#EE2737] text-[#EE2737] hover:text-white transition-all font-bold text-xs group cursor-pointer uppercase tracking-wider border border-[#EE2737]/25 shadow-xs"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-lg bg-[#EE2737] text-white flex items-center justify-center group-hover:bg-white group-hover:text-[#EE2737] transition-colors shadow-xs">
+                      <UtensilsCrossed className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span>Pesan Online di GoFood</span>
+                      <span className="block text-[10px] font-normal opacity-80 lowercase tracking-normal">delivery praktis langsung ke lokasi</span>
+                    </div>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
+                </a>
                 
                 {/* WhatsApp */}
                 <a
@@ -150,7 +182,7 @@ export const LocationContact: React.FC = () => {
 
           </div>
 
-        </div>
+        </motion.div>
 
       </div>
     </section>

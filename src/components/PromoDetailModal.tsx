@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Tag, Calendar, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
 import { PromoItem } from '../types';
+import { triggerHapticFeedback } from '../utils/haptics';
 
 interface PromoDetailModalProps {
   promo: PromoItem | null;
@@ -129,7 +130,10 @@ export const PromoDetailModal: React.FC<PromoDetailModalProps> = ({
             </button>
 
             <button
-              onClick={() => onClaim(promo)}
+              onClick={() => {
+                triggerHapticFeedback('light');
+                onClaim(promo);
+              }}
               className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer ${
                 isClaimed
                   ? 'bg-emerald-700 text-white'

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Ticket, Sparkles, Check, CheckCircle2, Copy, Calendar, ArrowRight, ShieldCheck } from 'lucide-react';
 import { VoucherItem } from '../types';
+import { triggerHapticFeedback } from '../utils/haptics';
 
 interface VoucherSectionProps {
   vouchers: VoucherItem[];
@@ -108,7 +109,10 @@ export const VoucherSection: React.FC<VoucherSectionProps> = ({
                     }`}>
                       <span>{voucher.code}</span>
                       <button
-                        onClick={() => onCopyCode(voucher.code)}
+                        onClick={() => {
+                          triggerHapticFeedback('light');
+                          onCopyCode(voucher.code);
+                        }}
                         title="Copy Code"
                         className="text-xs uppercase font-sans font-bold hover:underline cursor-pointer flex items-center gap-1"
                       >
@@ -119,7 +123,10 @@ export const VoucherSection: React.FC<VoucherSectionProps> = ({
 
                     {/* Claim Button */}
                     <button
-                      onClick={() => onClaimVoucher(voucher)}
+                      onClick={() => {
+                        triggerHapticFeedback('light');
+                        onClaimVoucher(voucher);
+                      }}
                       id={`btn-claim-${voucher.id}`}
                       className={`mt-2 w-full py-2 px-3 text-[11px] font-bold rounded uppercase tracking-wider transition-all cursor-pointer ${
                         isClaimed

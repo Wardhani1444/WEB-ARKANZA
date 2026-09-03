@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Coffee, Ticket, ChevronRight, Sparkles, ShieldCheck } from 'lucide-react';
+import { Menu, X, Coffee, Ticket, ChevronRight, Sparkles, ShieldCheck, UtensilsCrossed } from 'lucide-react';
 import { BrandingSettings } from '../types';
 import defaultLogo from '../assets/arkanza-logo.jpg';
 
@@ -124,6 +124,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
 
             <a
+              href="https://gofood.co.id/surabaya/restaurant/arkanza-coffee-and-roastery-96b124bb-eca7-4897-a775-77512ee9ef75"
+              target="_blank"
+              rel="noopener noreferrer"
+              id="cta-navbar-gofood"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded bg-[#EE2737]/15 hover:bg-[#EE2737] text-[#EE2737] hover:text-white border border-[#EE2737]/35 text-xs font-bold tracking-wider uppercase transition-all duration-200"
+              title="Pesan Online di GoFood"
+            >
+              <UtensilsCrossed className="w-3.5 h-3.5" />
+              <span>GoFood</span>
+            </a>
+
+            <a
               href="#promo"
               onClick={(e) => handleNavClick(e, '#promo')}
               id="cta-navbar-promo"
@@ -178,6 +190,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             <div className="pt-6 flex flex-col gap-3">
+              <a
+                href="https://gofood.co.id/surabaya/restaurant/arkanza-coffee-and-roastery-96b124bb-eca7-4897-a775-77512ee9ef75"
+                target="_blank"
+                rel="noopener noreferrer"
+                id="btn-mobile-drawer-gofood"
+                className="w-full py-3 rounded-xl bg-[#EE2737] hover:bg-[#D31F2E] text-white text-center font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-95"
+              >
+                <UtensilsCrossed className="w-4 h-4" />
+                <span>Pesan Online di GoFood</span>
+              </a>
+
               {claimedCount > 0 && (
                 <button
                   onClick={() => {

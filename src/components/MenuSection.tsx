@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, SlidersHorizontal, Sparkles, ArrowUpDown, X, Coffee, Eye } from 'lucide-react';
+import { Search, SlidersHorizontal, Sparkles, ArrowUpDown, X, Coffee, Eye, UtensilsCrossed, ExternalLink } from 'lucide-react';
 import { MenuItem, MenuCategory } from '../types';
 
 interface MenuSectionProps {
@@ -86,6 +86,36 @@ export const MenuSection: React.FC<MenuSectionProps> = ({ menuItems, onSelectMen
           <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
             From classic coffee to signature favorites. Setiap cangkir diseduh menggunakan biji kopi specialty pilihan hasil roasting mandiri.
           </p>
+        </div>
+
+        {/* GoFood Order Online Banner */}
+        <div className="mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#EE2737]/10 via-white to-[#1F4D3A]/10 border border-[#EE2737]/25 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-center sm:text-left">
+            <div className="w-10 h-10 rounded-xl bg-[#EE2737] text-white flex items-center justify-center shrink-0 shadow-md">
+              <UtensilsCrossed className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-0.5">
+                <span className="text-xs sm:text-sm font-bold text-[#111111]">Pesan Antar Praktis ke Lokasimu</span>
+                <span className="bg-[#EE2737] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  GoFood
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-gray-600 leading-relaxed">
+                Nikmati kopi specialty, camilan, dan makanan khas Arkanza Coffee langsung dari aplikasi GoFood.
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://gofood.co.id/surabaya/restaurant/arkanza-coffee-and-roastery-96b124bb-eca7-4897-a775-77512ee9ef75"
+            target="_blank"
+            rel="noopener noreferrer"
+            id="btn-menu-gofood-cta"
+            className="shrink-0 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#EE2737] hover:bg-[#D31F2E] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+          >
+            <span>Order via GoFood</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
 
         {/* Filter Bar & Controls */}

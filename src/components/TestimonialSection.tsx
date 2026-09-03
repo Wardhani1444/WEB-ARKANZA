@@ -98,7 +98,13 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
       <div className="absolute bottom-0 right-10 w-72 h-72 bg-[#A98262]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute inset-0 bg-dark-grain opacity-25 pointer-events-none" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+        className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+      >
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6 text-center md:text-left">
           <div>
@@ -133,25 +139,27 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
               <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-amber-400 transition-colors ml-0.5" />
             </a>
 
-            {/* Next / Prev Controls */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={prevSlide}
-                id="btn-prev-testimonial"
-                aria-label="Previous review"
-                className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#1F4D3A] text-gray-300 hover:text-white border border-white/15 hover:border-[#1F4D3A] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={nextSlide}
-                id="btn-next-testimonial"
-                aria-label="Next review"
-                className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#1F4D3A] text-gray-300 hover:text-white border border-white/15 hover:border-[#1F4D3A] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            {/* Next / Prev Controls (shown if more than 1 testimonial) */}
+            {total > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={prevSlide}
+                  id="btn-prev-testimonial"
+                  aria-label="Previous review"
+                  className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#1F4D3A] text-gray-300 hover:text-white border border-white/15 hover:border-[#1F4D3A] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  id="btn-next-testimonial"
+                  aria-label="Next review"
+                  className="w-9 h-9 rounded-full bg-white/5 hover:bg-[#1F4D3A] text-gray-300 hover:text-white border border-white/15 hover:border-[#1F4D3A] flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -195,6 +203,19 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
                         {current.role}
                       </p>
                     )}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {current.badge && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/20 text-[10px] font-semibold">
+                          <span>⭐</span>
+                          <span>{current.badge}</span>
+                        </span>
+                      )}
+                      {current.source && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/5 text-gray-300 border border-white/10 text-[10px] font-medium">
+                          <span>{current.source}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -223,9 +244,16 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
                     </div>
 
                     {/* Review Text */}
-                    <p className="text-sm sm:text-base md:text-lg text-gray-100 leading-relaxed font-normal italic">
+                    <p className="text-sm sm:text-base md:text-lg text-gray-100 leading-relaxed font-normal italic whitespace-pre-line">
                       &ldquo;{current.comment}&rdquo;
                     </p>
+
+                    {current.favoriteOrder && (
+                      <div className="mt-4 pt-3 border-t border-white/10 flex items-center gap-2 text-xs">
+                        <span className="text-gray-400 font-normal">Favorit:</span>
+                        <span className="font-semibold text-[#C5A880]">{current.favoriteOrder}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -233,50 +261,52 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Carousel Indicators & Thumbnails */}
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Dot Indicators */}
-          <div className="flex items-center gap-2">
-            {testimonials.map((item, idx) => (
-              <button
-                key={item.id}
-                onClick={() => goToSlide(idx)}
-                id={`btn-testimonial-dot-${idx}`}
-                aria-label={`Go to review ${idx + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  currentIndex === idx
-                    ? 'w-7 bg-[#A98262]'
-                    : 'w-2 bg-white/20 hover:bg-white/40'
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Quick Mini Avatars Selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400 font-medium hidden sm:inline mr-1">
-              Ulasan Lainnya:
-            </span>
-            {testimonials.map((item, idx) => (
-              <button
-                key={`thumb-${item.id}`}
-                onClick={() => goToSlide(idx)}
-                title={item.name}
-                className={`relative w-8 h-8 rounded-full overflow-hidden transition-all duration-200 cursor-pointer ${
-                  currentIndex === idx
-                    ? 'ring-2 ring-[#A98262] scale-110 opacity-100'
-                    : 'opacity-40 hover:opacity-100 hover:scale-105'
-                }`}
-              >
-                <img
-                  src={item.avatar}
-                  alt={item.name}
-                  className="w-full h-full object-cover"
+        {/* Carousel Indicators & Thumbnails (only if multiple testimonials) */}
+        {total > 1 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Dot Indicators */}
+            <div className="flex items-center gap-2">
+              {testimonials.map((item, idx) => (
+                <button
+                  key={item.id}
+                  onClick={() => goToSlide(idx)}
+                  id={`btn-testimonial-dot-${idx}`}
+                  aria-label={`Go to review ${idx + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    currentIndex === idx
+                      ? 'w-7 bg-[#A98262]'
+                      : 'w-2 bg-white/20 hover:bg-white/40'
+                  }`}
                 />
-              </button>
-            ))}
+              ))}
+            </div>
+
+            {/* Quick Mini Avatars Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 font-medium hidden sm:inline mr-1">
+                Ulasan Lainnya:
+              </span>
+              {testimonials.map((item, idx) => (
+                <button
+                  key={`thumb-${item.id}`}
+                  onClick={() => goToSlide(idx)}
+                  title={item.name}
+                  className={`relative w-8 h-8 rounded-full overflow-hidden transition-all duration-200 cursor-pointer ${
+                    currentIndex === idx
+                      ? 'ring-2 ring-[#A98262] scale-110 opacity-100'
+                      : 'opacity-40 hover:opacity-100 hover:scale-105'
+                  }`}
+                >
+                  <img
+                    src={item.avatar}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Leave a Review / Google Maps CTA */}
         <div className="mt-10 text-center">
@@ -291,7 +321,7 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
             <span>Bagikan Pengalamanmu di Google Review</span>
           </a>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 };

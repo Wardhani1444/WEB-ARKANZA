@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Check, Copy, Sparkles, Store, ShieldCheck, User, Phone, Mail, Loader2, CloudCheck } from 'lucide-react';
+import { X, Check, Copy, Sparkles, Store, ShieldCheck, User, Phone, Loader2, Instagram, MapPin } from 'lucide-react';
 import { VoucherItem, CustomerData, BrandingSettings } from '../types';
 import defaultLogo from '../assets/arkanza-logo.jpg';
 import { savePromoClaimToFirebase } from '../services/promoClaimService';
+import { triggerHapticFeedback } from '../utils/haptics';
 
 interface VoucherClaimModalProps {
   voucher: VoucherItem | null;
@@ -35,11 +36,12 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerSocialMedia, setCustomerSocialMedia] = useState('');
+  const [customerDomicile, setCustomerDomicile] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showSuccessView, setShowSuccessView] = useState(false);
-  const [firebaseDocId, setFirebaseDocId] = useState<string | null>(null);
+  const [, setFirebaseDocId] = useState<string | null>(null);
 
   // Pre-load saved customer data from localStorage
   useEffect(() => {
@@ -49,7 +51,9 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
         const parsed = JSON.parse(savedProfile);
         if (parsed.name) setCustomerName(parsed.name);
         if (parsed.phone) setCustomerPhone(parsed.phone);
-        if (parsed.email) setCustomerEmail(parsed.email);
+        if (parsed.socialMedia) setCustomerSocialMedia(parsed.socialMedia);
+        else if (parsed.email) setCustomerSocialMedia(parsed.email);
+        if (parsed.domicile) setCustomerDomicile(parsed.domicile);
       }
     } catch {
       // Ignore parse error
@@ -70,17 +74,20 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
 
   const handleSubmitClaim = async (e: React.FormEvent) => {
     e.preventDefault();
+    triggerHapticFeedback('light');
     setErrorMessage(null);
 
     const trimmedName = customerName.trim();
     const trimmedPhone = customerPhone.trim();
 
     if (!trimmedName) {
+      triggerHapticFeedback('warning');
       setErrorMessage('Silakan masukkan nama lengkap Anda.');
       return;
     }
 
     if (!trimmedPhone || trimmedPhone.length < 8) {
+      triggerHapticFeedback('warning');
       setErrorMessage('Silakan masukkan nomor WhatsApp / HP yang valid (minimal 8 digit).');
       return;
     }
@@ -92,7 +99,8 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
       const profileData: CustomerData = {
         name: trimmedName,
         phone: trimmedPhone,
-        email: customerEmail.trim() || undefined,
+        socialMedia: customerSocialMedia.trim() || undefined,
+        domicile: customerDomicile.trim() || undefined,
       };
       localStorage.setItem('arkanza_customer_profile', JSON.stringify(profileData));
 
@@ -100,7 +108,8 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
       const claimResult = await savePromoClaimToFirebase({
         customerName: trimmedName,
         customerPhone: trimmedPhone,
-        customerEmail: customerEmail.trim() || undefined,
+        customerSocialMedia: customerSocialMedia.trim() || undefined,
+        customerDomicile: customerDomicile.trim() || undefined,
         promoId: voucher.id,
         promoCode: voucher.code,
         promoTitle: voucher.title,
@@ -113,6 +122,7 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
         setFirebaseDocId(claimResult.id);
       }
 
+      triggerHapticFeedback('success');
       onSuccessClaim(voucher, profileData);
       setShowSuccessView(true);
     } catch (err: any) {
@@ -121,8 +131,10 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
       const profileData: CustomerData = {
         name: trimmedName,
         phone: trimmedPhone,
-        email: customerEmail.trim() || undefined,
+        socialMedia: customerSocialMedia.trim() || undefined,
+        domicile: customerDomicile.trim() || undefined,
       };
+      triggerHapticFeedback('success');
       onSuccessClaim(voucher, profileData);
       setShowSuccessView(true);
     } finally {
@@ -239,27 +251,38 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
                 />
               </div>
 
-              {/* Email (Opsional) */}
+              {/* Sosmed */}
               <div>
-                <label htmlFor="claim-customer-email" className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-[#A98262]" />
-                  <span>Email (Opsional)</span>
+                <label htmlFor="claim-customer-sosmed" className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1 flex items-center gap-1.5">
+                  <Instagram className="w-3.5 h-3.5 text-[#E1306C]" />
+                  <span>Sosmed (Instagram / TikTok)</span>
                 </label>
                 <input
-                  type="email"
-                  id="claim-customer-email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="Contoh: rian@email.com"
-                  className="w-full px-3 py-2.5 text-xs rounded-lg bg-white/5 border border-white/15 focus:border-[#25D366] focus:outline-none text-white placeholder-gray-500 transition-all"
+                  type="text"
+                  id="claim-customer-sosmed"
+                  value={customerSocialMedia}
+                  onChange={(e) => setCustomerSocialMedia(e.target.value)}
+                  placeholder="Contoh: @arkanzacoffee"
+                  className="w-full px-3 py-2.5 text-xs rounded-lg bg-white/5 border border-white/15 focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366] focus:outline-none text-white placeholder-gray-500 transition-all"
                 />
               </div>
 
-              {/* Security & Cloud Note */}
-              <div className="flex items-center gap-2 text-[10px] text-gray-400 bg-black/40 p-2.5 rounded-lg border border-white/5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Tersimpan otomatis di Firebase Firestore untuk verifikasi kasir.</span>
+              {/* Domisili */}
+              <div>
+                <label htmlFor="claim-customer-domisili" className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Domisili</span>
+                </label>
+                <input
+                  type="text"
+                  id="claim-customer-domisili"
+                  value={customerDomicile}
+                  onChange={(e) => setCustomerDomicile(e.target.value)}
+                  placeholder="Contoh: Surabaya, Sidoarjo, Gresik, dll"
+                  className="w-full px-3 py-2.5 text-xs rounded-lg bg-white/5 border border-white/15 focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366] focus:outline-none text-white placeholder-gray-500 transition-all"
+                />
               </div>
+
 
               {/* Submit Button */}
               <button
@@ -301,7 +324,10 @@ export const VoucherClaimModal: React.FC<VoucherClaimModalProps> = ({
                   {voucher.code}
                 </span>
                 <button
-                  onClick={() => onCopyCode(voucher.code)}
+                  onClick={() => {
+                    triggerHapticFeedback('light');
+                    onCopyCode(voucher.code);
+                  }}
                   id="modal-btn-copy-code"
                   className={`px-4 py-2 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                     isCopied
