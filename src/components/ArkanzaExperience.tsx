@@ -75,7 +75,7 @@ export const ArkanzaExperience: React.FC = () => {
             </h2>
 
             <p className="text-sm font-bold uppercase tracking-widest text-[#A98262] mb-3">
-              &quot;Working feels better with coffee.&quot;
+              &quot;Happiness for all&quot;
             </p>
 
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed mb-6 font-light">

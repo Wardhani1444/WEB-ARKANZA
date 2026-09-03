@@ -68,7 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
               </div>
 
               <p className="font-serif italic text-base text-[#A98262] mb-3">
-                &quot;Working feels better with coffee.&quot;
+                &quot;Happiness for all&quot;
               </p>
 
               <p className="text-xs text-gray-400 max-w-sm leading-relaxed font-light">

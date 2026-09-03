@@ -15,15 +15,9 @@ export const LocationContact: React.FC = () => {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           className="text-center max-w-2xl mx-auto mb-12"
         >
-          <div className="inline-block mb-2 px-3 py-1 bg-[#1F4D3A] text-white text-[10px] font-bold tracking-widest uppercase rounded">
-            <span>STORE LOCATION &amp; CONTACT</span>
-          </div>
-          <h2 className="font-serif italic text-3xl sm:text-4xl md:text-5xl font-bold text-[#111111] tracking-tight mb-2">
+          <h2 className="font-serif italic text-3xl sm:text-4xl md:text-5xl font-bold text-[#111111] tracking-tight">
             Find Us
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
-            Kunjungi outlet Arkanza Coffee &amp; Roastery untuk merasakan pengalaman seduhan kopi terbaik dan suasana yang nyaman.
-          </p>
         </motion.div>
 
         {/* Location & Map Grid with Fade-In Animation */}
