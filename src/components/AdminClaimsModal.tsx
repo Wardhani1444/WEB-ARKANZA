@@ -74,6 +74,7 @@ import {
 } from '../services/heroService';
 import { AdminFontManagerTab } from './AdminFontManagerTab';
 import { AdminBrandingManagerTab } from './AdminBrandingManagerTab';
+import { AdminMenuImagesTab } from './AdminMenuImagesTab';
 import arkanzaLogo from '../assets/arkanza-logo.jpg';
 
 interface AdminClaimsModalProps {
@@ -81,7 +82,7 @@ interface AdminClaimsModalProps {
   onClose: () => void;
   onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   customPromos?: PromoItem[];
-  initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding';
+  initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu';
 }
 
 // Preset photo options for quick visual selection
@@ -118,8 +119,8 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   onShowToast,
   initialTab = 'claims'
 }) => {
-  // Navigation tabs in Admin: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding'
-  const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding'>(initialTab);
+  // Navigation tabs in Admin: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu'
+  const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu'>(initialTab);
 
   // Sync initialTab if changed from parent
   useEffect(() => {
@@ -1018,6 +1019,19 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                 >
                   <Type className="w-4 h-4 text-purple-400" />
                   <span>Font &amp; Tipografi</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('manage_menu')}
+                  id="tab-btn-manage-menu"
+                  className={`pb-3 px-4 text-xs font-bold uppercase tracking-wider transition-all border-b-2 flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'manage_menu'
+                      ? 'border-[#D9A35E] text-white'
+                      : 'border-transparent text-gray-400 hover:text-gray-200'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4 text-[#D9A35E]" />
+                  <span>Gambar Menu (JPG)</span>
                 </button>
               </div>
 
@@ -2985,6 +2999,11 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                 <AdminFontManagerTab onShowToast={onShowToast} />
               )}
 
+              {/* TAB 7: KELOLA GAMBAR MENU (JPG) */}
+              {activeTab === 'manage_menu' && (
+                <AdminMenuImagesTab onShowToast={onShowToast} />
+              )}
+
               {/* FOOTER BAR */}
               <div className="px-5 py-3 border-t border-white/10 bg-black/60 flex items-center justify-between text-xs text-gray-400 shrink-0">
                 <div className="flex items-center gap-2">
@@ -3003,6 +3022,8 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                     ? `Logo & Brand Identity Aktif`
                     : activeTab === 'manage_fonts'
                     ? `Tipografi Global Website Aktif`
+                    : activeTab === 'manage_menu'
+                    ? `Kelola Gambar Menu JPG Aktif`
                     : `${allCatalogPromos.filter(p => p.isActive).length} Tayang di Web (${allCatalogPromos.length} Total Promo)`}
                 </div>
               </div>

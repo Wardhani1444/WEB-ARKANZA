@@ -8,13 +8,17 @@ interface NavbarProps {
   onOpenClaimedModal: () => void;
   onOpenAdminModal?: () => void;
   brandingSettings?: BrandingSettings;
+  currentView?: 'home' | 'menu';
+  onNavigateView?: (view: 'home' | 'menu', targetSection?: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
   claimedCount, 
   onOpenClaimedModal, 
   onOpenAdminModal,
-  brandingSettings
+  brandingSettings,
+  currentView = 'home',
+  onNavigateView
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -44,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Promo', href: '#promo' },
+    { name: 'Menu', href: '#menu' },
     { name: 'Review', href: '#testimonials' },
     { name: 'Hours', href: '#hours' },
     { name: 'Vibe', href: '#vibe' },
@@ -53,6 +58,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     setMobileMenuOpen(false);
+
+    if (href === '#menu') {
+      if (onNavigateView) {
+        onNavigateView('menu');
+      }
+      return;
+    }
+
+    if (currentView === 'menu') {
+      if (onNavigateView) {
+        onNavigateView('home', href);
+      }
+      return;
+    }
+
     const targetElement = document.querySelector(href);
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: 'smooth' });
@@ -97,16 +117,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-8 text-xs uppercase tracking-widest font-medium" id="desktop-nav-links">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className="text-[#F7F6F2]/80 hover:text-[#A98262] transition-colors relative py-1"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const isMenuActive = link.name === 'Menu' && currentView === 'menu';
+              return (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className={
+                    isMenuActive
+                      ? 'text-[#A98262] font-bold border-b-2 border-[#A98262] py-1 transition-all'
+                      : 'text-[#F7F6F2]/80 hover:text-[#A98262] transition-colors relative py-1'
+                  }
+                >
+                  {link.name}
+                </a>
+              );
+            })}
           </nav>
 
           {/* Right Action Buttons */}
@@ -176,17 +203,24 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <div className="flex flex-col gap-4 divide-y divide-white/10">
             <div className="flex flex-col gap-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  onClick={(e) => handleNavClick(e, link.href)}
-                  className="text-lg font-medium text-[#F7F6F2] py-2 px-3 rounded-lg hover:bg-white/5 flex items-center justify-between transition-colors"
-                >
-                  <span>{link.name}</span>
-                  <ChevronRight className="w-4 h-4 text-[#A98262]" />
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const isMenuActive = link.name === 'Menu' && currentView === 'menu';
+                return (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    onClick={(e) => handleNavClick(e, link.href)}
+                    className={`text-lg font-medium py-2 px-3 rounded-lg flex items-center justify-between transition-colors ${
+                      isMenuActive
+                        ? 'text-[#A98262] font-bold bg-white/10'
+                        : 'text-[#F7F6F2] hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{link.name}</span>
+                    <ChevronRight className="w-4 h-4 text-[#A98262]" />
+                  </a>
+                );
+              })}
             </div>
 
             <div className="pt-6 flex flex-col gap-3">

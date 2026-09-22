@@ -1,15 +1,24 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck, Music2, UtensilsCrossed } from 'lucide-react';
+import { Coffee, Instagram, Share2, ArrowUp, Heart, ShieldCheck, Music2, UtensilsCrossed, Lock } from 'lucide-react';
 import { BrandingSettings } from '../types';
 import defaultLogo from '../assets/arkanza-logo.jpg';
 
 interface FooterProps {
   onOpenAdminModal?: () => void;
+  onOpenAdminMenu?: () => void;
   brandingSettings?: BrandingSettings;
+  currentView?: 'home' | 'menu';
+  onNavigateView?: (view: 'home' | 'menu', targetSection?: string) => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettings }) => {
+export const Footer: React.FC<FooterProps> = ({ 
+  onOpenAdminModal, 
+  onOpenAdminMenu,
+  brandingSettings,
+  currentView = 'home',
+  onNavigateView
+}) => {
   const activeLogo = brandingSettings?.logoUrl || defaultLogo;
   const brandName = brandingSettings?.brandName || 'ARKANZA';
   const brandSubtitle = brandingSettings?.brandSubtitle || 'COFFEE & ROASTERY';
@@ -26,11 +35,34 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
   const navLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Promo Hari Ini', href: '#promo' },
+    { name: 'Daftar Menu', href: '#menu' },
     { name: 'Jam Operasional', href: '#hours' },
     { name: 'Catch Our Vibe', href: '#vibe' },
     { name: 'Ulasan Pelanggan', href: '#testimonials' },
     { name: 'Contact & Location', href: '#contact' },
   ];
+
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    if (href === '#menu') {
+      if (onNavigateView) {
+        onNavigateView('menu');
+      }
+      return;
+    }
+
+    if (currentView === 'menu') {
+      if (onNavigateView) {
+        onNavigateView('home', href);
+      }
+      return;
+    }
+
+    const targetElement = document.querySelector(href);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <footer className="bg-[#111111] text-[#F7F6F2] pt-16 pb-12 border-t border-white/10 relative overflow-hidden">
@@ -134,7 +166,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-xs text-gray-400 hover:text-white uppercase tracking-wider transition-colors"
+                    onClick={(e) => handleLinkClick(e, link.href)}
+                    className="text-xs text-gray-400 hover:text-white uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     {link.name}
                   </a>
@@ -171,6 +204,16 @@ export const Footer: React.FC<FooterProps> = ({ onOpenAdminModal, brandingSettin
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#F7F6F2]/50">
           <p>© 2026 Arkanza Coffee &amp; Roastery. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-4">
+            {onOpenAdminMenu && (
+              <button
+                onClick={onOpenAdminMenu}
+                id="btn-footer-admin-menu"
+                className="flex text-xs text-[#A98262] hover:text-white items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Kelola Menu (Admin)</span>
+              </button>
+            )}
             {onOpenAdminModal && (
               <button
                 onClick={onOpenAdminModal}

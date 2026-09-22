@@ -7,6 +7,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { PromosSection } from './components/PromosSection';
+import { MenuSection } from './components/MenuSection';
+import { MenuDetailModal } from './components/MenuDetailModal';
 import { PromoDetailModal } from './components/PromoDetailModal';
 import { VoucherClaimModal } from './components/VoucherClaimModal';
 import { ClaimedVouchersDrawer } from './components/ClaimedVouchersDrawer';
@@ -21,9 +23,10 @@ import { Toast } from './components/Toast';
 import { FloatingWhatsAppButton } from './components/FloatingWhatsAppButton';
 
 import { PROMO_ITEMS } from './data/promosData';
+import { MENU_ITEMS } from './data/menuData';
 import { VOUCHER_ITEMS } from './data/vouchersData';
 import { VIBE_PHOTOS } from './data/vibeData';
-import { PromoItem, VoucherItem, ToastNotification, CustomerData, VibePhoto, HeroSettings, FontSettings, BrandingSettings } from './types';
+import { PromoItem, VoucherItem, MenuItem, ToastNotification, CustomerData, VibePhoto, HeroSettings, FontSettings, BrandingSettings } from './types';
 import { subscribeToCustomPromos, subscribeToDisabledPromoIds, getLocalDisabledPromoIds } from './services/promoService';
 import { subscribeToVibePhotos, getLocalVibePhotos } from './services/vibeService';
 import { subscribeToHeroSettings, getLocalHeroSettings } from './services/heroService';
@@ -130,12 +133,59 @@ export default function App() {
     }
   });
 
+  // View state: 'home' (Landing Page) or 'menu' (Dedicated Menu Section)
+  const [currentView, setCurrentView] = useState<'home' | 'menu'>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#menu') {
+      return 'menu';
+    }
+    return 'home';
+  });
+
+  // Listen to hash changes for direct URL access (e.g. #menu)
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === '#menu') {
+        setCurrentView('menu');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (window.location.hash === '#hero' || window.location.hash === '#home' || !window.location.hash) {
+        setCurrentView('home');
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const handleNavigateView = (view: 'home' | 'menu', targetSection?: string) => {
+    setCurrentView(view);
+    if (view === 'menu') {
+      window.location.hash = '#menu';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      if (window.location.hash === '#menu') {
+        window.location.hash = targetSection || '#hero';
+      }
+      if (targetSection) {
+        setTimeout(() => {
+          const el = document.querySelector(targetSection);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 100);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  };
+
   // Modals state
   const [selectedPromo, setSelectedPromo] = useState<PromoItem | null>(null);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
   const [claimedVoucherModalItem, setClaimedVoucherModalItem] = useState<VoucherItem | null>(null);
   const [isClaimedDrawerOpen, setIsClaimedDrawerOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [adminInitialTab, setAdminInitialTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding'>('claims');
+  const [adminInitialTab, setAdminInitialTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu'>('claims');
   const [isHeroCustomizerOpen, setIsHeroCustomizerOpen] = useState(false);
 
   // Copy state & Toasts
@@ -251,48 +301,73 @@ export default function App() {
         onOpenClaimedModal={() => setIsClaimedDrawerOpen(true)}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
         brandingSettings={brandingSettings}
+        currentView={currentView}
+        onNavigateView={handleNavigateView}
       />
 
-      {/* 1. Hero Section (Dark, Warm, Earthy) */}
-      <Hero
-        settings={heroSettings}
-        onDiscoverPromo={() => scrollToSection('promo')}
-        onExploreLocation={() => scrollToSection('hours')}
-      />
+      {/* Main View: Standalone Menu Page OR Landing Page */}
+      {currentView === 'menu' ? (
+        <main className="flex-1">
+          <MenuSection
+            menuItems={MENU_ITEMS}
+            onSelectMenuItem={(item) => setSelectedMenuItem(item)}
+            onBackToHome={() => handleNavigateView('home')}
+            onOpenAdminMenu={() => {
+              setAdminInitialTab('manage_menu');
+              setIsAdminModalOpen(true);
+            }}
+          />
+        </main>
+      ) : (
+        <main className="flex-1">
+          {/* 1. Hero Section (Dark, Warm, Earthy) */}
+          <Hero
+            settings={heroSettings}
+            onDiscoverPromo={() => scrollToSection('promo')}
+            onExploreLocation={() => scrollToSection('hours')}
+          />
 
-      {/* 2. Today's Special / Promos Section (Light) */}
-      <PromosSection
-        promos={allPromos}
-        onSelectPromo={(promo) => setSelectedPromo(promo)}
-        onQuickClaimPromo={handleClaimPromo}
-        claimedCodes={claimedCodes}
-      />
+          {/* 2. Today's Special / Promos Section (Light) */}
+          <PromosSection
+            promos={allPromos}
+            onSelectPromo={(promo) => setSelectedPromo(promo)}
+            onQuickClaimPromo={handleClaimPromo}
+            claimedCodes={claimedCodes}
+          />
 
-      {/* 3. Customer Reviews & Testimonials Carousel (Dark) */}
-      <TestimonialSection />
+          {/* 3. Customer Reviews & Testimonials Carousel (Dark) */}
+          <TestimonialSection />
 
-      {/* 4. Opening Hours & Live Open Status (Light) */}
-      <OpeningHoursSection />
+          {/* 4. Opening Hours & Live Open Status (Light) */}
+          <OpeningHoursSection />
 
-      {/* 5. Catch Our Vibe - Instagram Grid (Dark) with Real-Time Firestore Sync */}
-      <CatchOurVibe
-        photos={vibePhotos}
-        onOpenGalleryManager={() => {
-          setAdminInitialTab('manage_vibe');
-          setIsAdminModalOpen(true);
-        }}
-      />
+          {/* 5. Catch Our Vibe - Instagram Grid (Dark) with Real-Time Firestore Sync */}
+          <CatchOurVibe
+            photos={vibePhotos}
+            onOpenGalleryManager={() => {
+              setAdminInitialTab('manage_vibe');
+              setIsAdminModalOpen(true);
+            }}
+          />
 
-      {/* 6. Find Us & Location (Light) */}
-      <LocationContact />
+          {/* 6. Find Us & Location (Light) */}
+          <LocationContact />
+        </main>
+      )}
 
-      {/* 7. Footer (Dark) */}
+      {/* Footer (Dark) */}
       <Footer
         onOpenAdminModal={() => {
           setAdminInitialTab('claims');
           setIsAdminModalOpen(true);
         }}
+        onOpenAdminMenu={() => {
+          setAdminInitialTab('manage_menu');
+          setIsAdminModalOpen(true);
+        }}
         brandingSettings={brandingSettings}
+        currentView={currentView}
+        onNavigateView={handleNavigateView}
       />
 
       {/* Floating WhatsApp Quick Table Booking */}
@@ -314,6 +389,13 @@ export default function App() {
         onShowToast={showToast}
         customPromos={customPromos}
         initialTab={adminInitialTab}
+      />
+
+      {/* Menu Detail Modal */}
+      <MenuDetailModal
+        item={selectedMenuItem}
+        onClose={() => setSelectedMenuItem(null)}
+        onViewPromos={() => scrollToSection('promo')}
       />
 
       {/* Promo Detail Modal */}

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 900" width="100%" height="100%">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background Cream Paper -->
+  <rect width="800" height="900" rx="24" fill="#F4EDE4"/>
+
+  <!-- Top Header -->
+  <text x="50" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="700" fill="#786C5E" letter-spacing="1.5">COFFEE</text>
+  <text x="750" y="70" text-anchor="end" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#786C5E">Arkanza Coffee &amp; Roastery</text>
+  
+  <line x1="50" y1="85" x2="750" y2="85" stroke="#E2D7C7" stroke-width="1.5"/>
+
+  <!-- Category Title -->
+  <text x="400" y="145" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="34" font-weight="900" fill="#D35400" letter-spacing="2">ESPRESSO BASED</text>
+
+  <!-- Item 1: Espresso -->
+  <g transform="translate(50, 220)" filter="url(#shadow)">
+    <rect width="700" height="95" rx="16" fill="#FFFFFF"/>
+    <text x="25" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" fill="#1C1B1A">Espresso</text>
+    <text x="25" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#666666">Satu shot ekstraksi kopi, air dan biskuit</text>
+    
+    <rect x="610" y="24" width="65" height="38" rx="19" fill="#D35400"/>
+    <text x="642.5" y="49" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">20k</text>
+  </g>
+
+  <!-- Item 2: Ice Americano -->
+  <g transform="translate(50, 340)" filter="url(#shadow)">
+    <rect width="700" height="95" rx="16" fill="#FFFFFF"/>
+    <text x="25" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" fill="#1C1B1A">Ice Americano</text>
+    <text x="25" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#666666">Dua shot kopi &amp; es batu</text>
+    
+    <rect x="610" y="24" width="65" height="38" rx="19" fill="#D35400"/>
+    <text x="642.5" y="49" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">23k</text>
+  </g>
+
+  <!-- Item 3: Mochaccino -->
+  <g transform="translate(50, 460)" filter="url(#shadow)">
+    <rect width="700" height="95" rx="16" fill="#FFFFFF"/>
+    <text x="25" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" fill="#1C1B1A">Mochaccino</text>
+    <text x="25" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#666666">Satu shot Espresso, bubuk coklat, susu steam, foam susu dan biskuit</text>
+    
+    <rect x="610" y="24" width="65" height="38" rx="19" fill="#D35400"/>
+    <text x="642.5" y="49" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">28k</text>
+  </g>
+
+  <!-- Item 4: Hot Americano -->
+  <g transform="translate(50, 580)" filter="url(#shadow)">
+    <rect width="700" height="95" rx="16" fill="#FFFFFF"/>
+    <text x="25" y="42" font-family="'Helvetica Neue', Arial, sans-serif" font-size="20" font-weight="700" fill="#1C1B1A">Hot Americano</text>
+    <text x="25" y="70" font-family="'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#666666">Satu shot kopi dan air panas, biskuit</text>
+    
+    <rect x="610" y="24" width="65" height="38" rx="19" fill="#D35400"/>
+    <text x="642.5" y="49" text-anchor="middle" font-family="'Helvetica Neue', Arial, sans-serif" font-size="16" font-weight="800" fill="#FFFFFF">20k</text>
+  </g>
+
+  <!-- Bottom Footer -->
+  <line x1="50" y1="810" x2="750" y2="810" stroke="#E2D7C7" stroke-width="1.5"/>
+  <text x="50" y="845" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="600" fill="#786C5E">Arkanza Coffee &amp; Roastery</text>
+  <text x="750" y="845" text-anchor="end" font-family="'Helvetica Neue', Arial, sans-serif" font-size="13" font-weight="700" fill="#786C5E">Halaman 4</text>
+</svg>
