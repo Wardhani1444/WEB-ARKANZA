@@ -8,8 +8,8 @@ interface FooterProps {
   onOpenAdminModal?: () => void;
   onOpenAdminMenu?: () => void;
   brandingSettings?: BrandingSettings;
-  currentView?: 'home' | 'menu';
-  onNavigateView?: (view: 'home' | 'menu', targetSection?: string) => void;
+  currentView?: 'home' | 'menu' | 'admin';
+  onNavigateView?: (view: 'home' | 'menu' | 'admin', targetSection?: string, initialTab?: any) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ 
@@ -204,26 +204,35 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#F7F6F2]/50">
           <p>© 2026 Arkanza Coffee &amp; Roastery. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-4">
-            {onOpenAdminMenu && (
-              <button
-                onClick={onOpenAdminMenu}
-                id="btn-footer-admin-menu"
-                className="flex text-xs text-[#A98262] hover:text-white items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>Kelola Menu (Admin)</span>
-              </button>
-            )}
-            {onOpenAdminModal && (
-              <button
-                onClick={onOpenAdminModal}
-                id="btn-footer-admin-portal"
-                className="hidden sm:flex text-xs text-[#A98262] hover:text-white items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Portal Kasir &amp; Data Customer (PIN)</span>
-              </button>
-            )}
+            <button
+              onClick={() => {
+                if (onNavigateView) {
+                  onNavigateView('admin', undefined, 'manage_menu');
+                } else if (onOpenAdminMenu) {
+                  onOpenAdminMenu();
+                }
+              }}
+              id="btn-footer-admin-menu"
+              className="flex text-xs text-[#A98262] hover:text-white items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>Kelola Menu (Admin)</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (onNavigateView) {
+                  onNavigateView('admin', undefined, 'claims');
+                } else if (onOpenAdminModal) {
+                  onOpenAdminModal();
+                }
+              }}
+              id="btn-footer-admin-portal"
+              className="flex text-xs text-[#A98262] hover:text-white items-center gap-1.5 transition-colors cursor-pointer p-1 rounded hover:bg-white/5"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Portal Admin &amp; Kasir (PIN)</span>
+            </button>
             <p className="hidden sm:flex items-center gap-1">
               Crafted for Coffee Lovers &amp; Creators
             </p>

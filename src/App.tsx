@@ -133,19 +133,23 @@ export default function App() {
     }
   });
 
-  // View state: 'home' (Landing Page) or 'menu' (Dedicated Menu Section)
-  const [currentView, setCurrentView] = useState<'home' | 'menu'>(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#menu') {
-      return 'menu';
+  // View state: 'home' (Landing Page), 'menu' (Dedicated Menu Section), or 'admin' (Dedicated Admin Section)
+  const [currentView, setCurrentView] = useState<'home' | 'menu' | 'admin'>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.hash === '#menu') return 'menu';
+      if (window.location.hash === '#admin' || window.location.hash === '#portal-admin') return 'admin';
     }
     return 'home';
   });
 
-  // Listen to hash changes for direct URL access (e.g. #menu)
+  // Listen to hash changes for direct URL access (e.g. #menu, #admin)
   useEffect(() => {
     const handleHash = () => {
       if (window.location.hash === '#menu') {
         setCurrentView('menu');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (window.location.hash === '#admin' || window.location.hash === '#portal-admin') {
+        setCurrentView('admin');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (window.location.hash === '#hero' || window.location.hash === '#home' || !window.location.hash) {
         setCurrentView('home');
@@ -155,13 +159,23 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  const handleNavigateView = (view: 'home' | 'menu', targetSection?: string) => {
+  const handleNavigateView = (
+    view: 'home' | 'menu' | 'admin',
+    targetSection?: string,
+    initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu'
+  ) => {
+    if (initialTab) {
+      setAdminInitialTab(initialTab);
+    }
     setCurrentView(view);
     if (view === 'menu') {
       window.location.hash = '#menu';
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (view === 'admin') {
+      window.location.hash = '#admin';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      if (window.location.hash === '#menu') {
+      if (window.location.hash === '#menu' || window.location.hash === '#admin' || window.location.hash === '#portal-admin') {
         window.location.hash = targetSection || '#hero';
       }
       if (targetSection) {
@@ -299,23 +313,32 @@ export default function App() {
       <Navbar
         claimedCount={claimedCodes.length}
         onOpenClaimedModal={() => setIsClaimedDrawerOpen(true)}
-        onOpenAdminModal={() => setIsAdminModalOpen(true)}
+        onOpenAdminModal={() => handleNavigateView('admin', undefined, 'claims')}
         brandingSettings={brandingSettings}
         currentView={currentView}
         onNavigateView={handleNavigateView}
       />
 
-      {/* Main View: Standalone Menu Page OR Landing Page */}
-      {currentView === 'menu' ? (
+      {/* Main View: Dedicated Admin Portal Section OR Dedicated Menu Page OR Landing Page */}
+      {currentView === 'admin' ? (
+        <main className="flex-1">
+          <AdminClaimsModal
+            isStandalone={true}
+            isOpen={true}
+            onClose={() => handleNavigateView('home')}
+            onBackToHome={() => handleNavigateView('home')}
+            onShowToast={showToast}
+            customPromos={customPromos}
+            initialTab={adminInitialTab}
+          />
+        </main>
+      ) : currentView === 'menu' ? (
         <main className="flex-1">
           <MenuSection
             menuItems={MENU_ITEMS}
             onSelectMenuItem={(item) => setSelectedMenuItem(item)}
             onBackToHome={() => handleNavigateView('home')}
-            onOpenAdminMenu={() => {
-              setAdminInitialTab('manage_menu');
-              setIsAdminModalOpen(true);
-            }}
+            onOpenAdminMenu={() => handleNavigateView('admin', undefined, 'manage_menu')}
           />
         </main>
       ) : (
@@ -344,10 +367,7 @@ export default function App() {
           {/* 5. Catch Our Vibe - Instagram Grid (Dark) with Real-Time Firestore Sync */}
           <CatchOurVibe
             photos={vibePhotos}
-            onOpenGalleryManager={() => {
-              setAdminInitialTab('manage_vibe');
-              setIsAdminModalOpen(true);
-            }}
+            onOpenGalleryManager={() => handleNavigateView('admin', undefined, 'manage_vibe')}
           />
 
           {/* 6. Find Us & Location (Light) */}
@@ -357,14 +377,8 @@ export default function App() {
 
       {/* Footer (Dark) */}
       <Footer
-        onOpenAdminModal={() => {
-          setAdminInitialTab('claims');
-          setIsAdminModalOpen(true);
-        }}
-        onOpenAdminMenu={() => {
-          setAdminInitialTab('manage_menu');
-          setIsAdminModalOpen(true);
-        }}
+        onOpenAdminModal={() => handleNavigateView('admin', undefined, 'claims')}
+        onOpenAdminMenu={() => handleNavigateView('admin', undefined, 'manage_menu')}
         brandingSettings={brandingSettings}
         currentView={currentView}
         onNavigateView={handleNavigateView}
@@ -382,14 +396,16 @@ export default function App() {
         onShowToast={showToast}
       />
 
-      {/* Admin / Cashier Claims, Custom Promo & Gallery Manager Modal */}
-      <AdminClaimsModal
-        isOpen={isAdminModalOpen}
-        onClose={() => setIsAdminModalOpen(false)}
-        onShowToast={showToast}
-        customPromos={customPromos}
-        initialTab={adminInitialTab}
-      />
+      {/* Admin / Cashier Claims modal fallback if opened imperatively */}
+      {isAdminModalOpen && (
+        <AdminClaimsModal
+          isOpen={isAdminModalOpen}
+          onClose={() => setIsAdminModalOpen(false)}
+          onShowToast={showToast}
+          customPromos={customPromos}
+          initialTab={adminInitialTab}
+        />
+      )}
 
       {/* Menu Detail Modal */}
       <MenuDetailModal

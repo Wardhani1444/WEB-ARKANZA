@@ -26,6 +26,7 @@ import {
   Image as ImageIcon,
   Check,
   ArrowRight,
+  ArrowLeft,
   Coffee,
   Percent,
   Layers,
@@ -78,11 +79,13 @@ import { AdminMenuImagesTab } from './AdminMenuImagesTab';
 import arkanzaLogo from '../assets/arkanza-logo.jpg';
 
 interface AdminClaimsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
   onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   customPromos?: PromoItem[];
   initialTab?: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu';
+  isStandalone?: boolean;
+  onBackToHome?: () => void;
 }
 
 // Preset photo options for quick visual selection
@@ -114,10 +117,12 @@ const PRESET_PROMO_IMAGES = [
 ];
 
 export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
-  isOpen,
+  isOpen = true,
   onClose,
   onShowToast,
-  initialTab = 'claims'
+  initialTab = 'claims',
+  isStandalone = false,
+  onBackToHome
 }) => {
   // Navigation tabs in Admin: 'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu'
   const [activeTab, setActiveTab] = useState<'claims' | 'manage_promos' | 'manage_vibe' | 'manage_hero' | 'manage_fonts' | 'manage_branding' | 'manage_menu'>(initialTab);
@@ -807,73 +812,78 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
     return allCatalogPromos;
   }, [allCatalogPromos, promoFilter]);
 
-  if (!isOpen) return null;
+  if (!isStandalone && !isOpen) return null;
 
-  return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md"
-        />
+  const innerCard = (
+    <div className={`relative w-full ${isStandalone ? 'max-w-7xl mx-auto flex-1 shadow-2xl' : 'max-w-5xl my-auto max-h-[94vh]'} bg-[#121212] text-[#F7F6F2] rounded-2xl sm:rounded-3xl border border-[#1F4D3A] shadow-2xl z-10 overflow-hidden flex flex-col`}>
+      {/* Header Bar */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/10 bg-[#163A2C]/60 shrink-0">
+        <div className="flex items-center gap-3">
+          {isStandalone && (
+            <button
+              type="button"
+              onClick={onBackToHome || onClose}
+              id="btn-admin-back-to-home"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white transition-all cursor-pointer active:scale-95 shadow-sm"
+              title="Kembali ke Beranda Website"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#D9A35E]" />
+              <span className="hidden sm:inline">Beranda</span>
+            </button>
+          )}
 
-        {/* Modal Box */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 15 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-          className="relative w-full max-w-5xl bg-[#121212] text-[#F7F6F2] rounded-2xl sm:rounded-3xl border border-[#1F4D3A] shadow-2xl z-10 overflow-hidden flex flex-col max-h-[94vh] my-auto"
-        >
-          {/* Header Bar */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-[#163A2C]/60 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center border border-[#A98262]/60 overflow-hidden p-0.5 shadow-inner">
-                <img
-                  src={arkanzaLogo}
-                  alt="Arkanza Logo"
-                  className="w-full h-full object-contain"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#A98262]">
-                    STAFF &amp; KASIR PORTAL
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Firebase Cloud
-                  </span>
-                </div>
-                <h2 className="text-base sm:text-lg font-bold text-white leading-none mt-0.5 font-serif italic">
-                  Arkanza Admin &amp; Promo Manager
-                </h2>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {isAuthenticated && (
-                <button
-                  onClick={() => setIsAuthenticated(false)}
-                  className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-                  title="Kunci Panel"
-                >
-                  Kunci Akses
-                </button>
-              )}
-              <button
-                onClick={onClose}
-                className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-                aria-label="Tutup Panel Kasir"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+          <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center border border-[#A98262]/60 overflow-hidden p-0.5 shadow-inner shrink-0">
+            <img
+              src={arkanzaLogo}
+              alt="Arkanza Logo"
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#A98262]">
+                STAFF &amp; KASIR PORTAL
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                Firebase Cloud
+              </span>
+            </div>
+            <h2 className="text-base sm:text-lg font-bold text-white leading-none mt-0.5 font-serif italic">
+              Arkanza Admin &amp; Promo Manager
+            </h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {isAuthenticated && (
+            <button
+              onClick={() => setIsAuthenticated(false)}
+              className="hidden sm:inline-flex px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              title="Kunci Panel"
+            >
+              Kunci Akses
+            </button>
+          )}
+          {isStandalone ? (
+            <button
+              onClick={onBackToHome || onClose}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#1F4D3A] hover:bg-[#28634c] text-white text-xs font-bold transition-all cursor-pointer shadow-md active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4 text-[#D9A35E]" />
+              <span>Keluar ke Website</span>
+            </button>
+          ) : (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+              aria-label="Tutup Panel Kasir"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      </div>
 
           {/* VIEW 1: PIN AUTHENTICATION FORM */}
           {!isAuthenticated ? (
@@ -3030,6 +3040,38 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
 
             </div>
           )}
+    </div>
+  );
+
+  if (isStandalone) {
+    return (
+      <section id="admin-portal-section" className="min-h-screen bg-[#0A0A0A] text-[#F7F6F2] pt-24 sm:pt-28 pb-16 px-2 sm:px-6 lg:px-8 flex flex-col">
+        {innerCard}
+      </section>
+    );
+  }
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/85 backdrop-blur-md"
+        />
+
+        {/* Modal Box */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+          className="relative w-full max-w-5xl z-10 flex flex-col my-auto"
+        >
+          {innerCard}
         </motion.div>
       </div>
     </AnimatePresence>

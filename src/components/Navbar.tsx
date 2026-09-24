@@ -8,8 +8,8 @@ interface NavbarProps {
   onOpenClaimedModal: () => void;
   onOpenAdminModal?: () => void;
   brandingSettings?: BrandingSettings;
-  currentView?: 'home' | 'menu';
-  onNavigateView?: (view: 'home' | 'menu', targetSection?: string) => void;
+  currentView?: 'home' | 'menu' | 'admin';
+  onNavigateView?: (view: 'home' | 'menu' | 'admin', targetSection?: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -66,7 +66,16 @@ export const Navbar: React.FC<NavbarProps> = ({
       return;
     }
 
-    if (currentView === 'menu') {
+    if (href === '#admin') {
+      if (onNavigateView) {
+        onNavigateView('admin');
+      } else if (onOpenAdminModal) {
+        onOpenAdminModal();
+      }
+      return;
+    }
+
+    if (currentView === 'menu' || currentView === 'admin') {
       if (onNavigateView) {
         onNavigateView('home', href);
       }
@@ -166,10 +175,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="#promo"
               onClick={(e) => handleNavClick(e, '#promo')}
               id="cta-navbar-promo"
-              className="inline-flex items-center justify-center px-6 py-2 rounded bg-[#1F4D3A] hover:bg-[#163A2C] text-white text-xs font-semibold tracking-wider uppercase transition-all duration-200 shadow-sm active:scale-95"
+              className="inline-flex items-center justify-center px-5 py-2 rounded bg-[#1F4D3A] hover:bg-[#163A2C] text-white text-xs font-semibold tracking-wider uppercase transition-all duration-200 shadow-sm active:scale-95"
             >
-              LIHAT PROMO
+              PROMO
             </a>
+
+            {currentView === 'admin' && (
+              <button
+                onClick={() => onNavigateView?.('home')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-[#D9A35E] hover:bg-[#c48f4b] text-black text-xs font-bold tracking-wider uppercase transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <span>← Beranda</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -255,6 +273,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 Lihat Promo Spesial
               </a>
+
+              {currentView === 'admin' && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onNavigateView?.('home');
+                  }}
+                  className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 text-stone-200 hover:text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <span>← Kembali ke Beranda</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

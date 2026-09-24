@@ -284,54 +284,6 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
               )}
             </div>
 
-            {/* Navigation Controls */}
-            {jpgImages.length > 1 && (
-              <div className="w-full max-w-2xl mt-5 flex items-center justify-between gap-3 bg-[#181818] p-3 rounded-2xl border border-stone-800">
-                <button
-                  onClick={goToPrev}
-                  disabled={currentIndex === 0}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer active:scale-95"
-                >
-                  <ChevronLeft className="w-4 h-4 text-[#D9A35E]" />
-                  <span>Sebelumnya</span>
-                </button>
-
-                {/* Page Number Indicators */}
-                <div className="flex items-center gap-1.5 overflow-x-auto px-2 max-w-[200px] sm:max-w-md scrollbar-none">
-                  {jpgImages.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setDirection(idx > currentIndex ? 1 : -1);
-                        setCurrentIndex(idx);
-                      }}
-                      className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                        currentIndex === idx
-                          ? 'bg-[#D9A35E] text-black scale-110 shadow-md'
-                          : 'bg-white/10 text-stone-400 hover:text-white'
-                      }`}
-                    >
-                      {idx + 1}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  onClick={goToNext}
-                  disabled={currentIndex === jpgImages.length - 1}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer active:scale-95"
-                >
-                  <span>Berikutnya</span>
-                  <ChevronRight className="w-4 h-4 text-[#D9A35E]" />
-                </button>
-              </div>
-            )}
-
-            {/* Page Counter text */}
-            <div className="mt-3 text-xs text-stone-500 font-medium">
-              Halaman {currentIndex + 1} dari {jpgImages.length}
-            </div>
-
           </div>
         )}
 

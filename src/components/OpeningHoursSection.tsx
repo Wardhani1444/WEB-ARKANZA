@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Clock, Calendar, CheckCircle2, MapPin, Sparkles, Coffee } from 'lucide-react';
+import { Clock, Calendar, MapPin, Coffee } from 'lucide-react';
 
 export const OpeningHoursSection: React.FC = () => {
   const [isOpenNow, setIsOpenNow] = useState(true);
@@ -103,11 +103,6 @@ export const OpeningHoursSection: React.FC = () => {
                   Ideal untuk pagi produktif, remote work, meeting santai, hingga kopi sore.
                 </p>
               </div>
-
-              <div className="pt-3 border-t border-black/10 flex items-center gap-2 text-xs text-[#1F4D3A] font-bold">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Full Kitchen &amp; Espresso Bar Active</span>
-              </div>
             </div>
 
             {/* Weekend */}
@@ -126,11 +121,6 @@ export const OpeningHoursSection: React.FC = () => {
                 <p className="text-xs text-gray-400 mt-1 leading-relaxed">
                   Malam lebih panjang untuk bersantai bersama teman, live chill vibes, dan manual brew slow bar.
                 </p>
-              </div>
-
-              <div className="pt-3 border-t border-white/10 flex items-center gap-2 text-xs text-[#A98262] font-bold">
-                <Sparkles className="w-4 h-4" />
-                <span>Late Night Coffee &amp; Weekend Vouchers Apply</span>
               </div>
             </div>
 
