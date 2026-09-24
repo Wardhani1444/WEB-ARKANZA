@@ -81,11 +81,11 @@ export const HeroBackgroundCustomizerModal: React.FC<HeroBackgroundCustomizerMod
   // Handle PIN verification
   const handleVerifyPin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === '1234' || pinInput === 'arkanza' || pinInput === 'admin') {
+    if (pinInput === '007' || pinInput === 'arkanza' || pinInput === 'admin') {
       setIsPinUnlocked(true);
       setPinError(null);
     } else {
-      setPinError('PIN salah. Masukkan PIN Admin/Kasir (Default: 1234)');
+      setPinError('PIN salah. Silakan periksa kembali PIN Anda.');
     }
   };
 
@@ -242,7 +242,7 @@ export const HeroBackgroundCustomizerModal: React.FC<HeroBackgroundCustomizerMod
               </div>
               <h4 className="text-lg font-bold text-white mb-1">Verifikasi Akses Admin / Kasir</h4>
               <p className="text-xs text-white/60 mb-6">
-                Masukkan PIN keamanan kasir untuk mengganti background website Arkanza (Default PIN: <span className="text-[#A98262] font-mono font-bold">1234</span>).
+                Masukkan PIN keamanan kasir untuk mengganti background website Arkanza.
               </p>
 
               <form onSubmit={handleVerifyPin} className="w-full space-y-4">
@@ -252,7 +252,7 @@ export const HeroBackgroundCustomizerModal: React.FC<HeroBackgroundCustomizerMod
                     maxLength={10}
                     value={pinInput}
                     onChange={(e) => setPinInput(e.target.value)}
-                    placeholder="Masukkan PIN (1234)"
+                    placeholder="Masukkan PIN Admin / Kasir"
                     className="w-full text-center tracking-widest text-lg font-mono bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#1F4D3A] focus:ring-1 focus:ring-[#1F4D3A]"
                     autoFocus
                   />

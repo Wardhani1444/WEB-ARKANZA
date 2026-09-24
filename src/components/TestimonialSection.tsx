@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Quote,
   CheckCircle2,
-  Sparkles,
   MessageSquareQuote,
   ExternalLink,
 } from 'lucide-react';
@@ -108,10 +107,6 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12 gap-6 text-center md:text-left">
           <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 bg-[#163A2C] border border-[#1F4D3A] text-[#F7F6F2] text-[11px] font-bold tracking-widest uppercase rounded mb-3 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#A98262]" />
-              <span>TESTIMONIALS &amp; REVIEWS</span>
-            </div>
             <h2 className="font-serif italic text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight">
               Words From Coffee Lovers.
             </h2>

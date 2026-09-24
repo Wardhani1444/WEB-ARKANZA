@@ -27,7 +27,7 @@ export const PromosSection: React.FC<PromosSectionProps> = ({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-12"
+          className="mb-10 sm:mb-12"
         >
           <div>
             <h2 className="font-serif italic text-3xl sm:text-4xl text-[#1F4D3A] font-bold tracking-tight">
@@ -37,9 +37,6 @@ export const PromosSection: React.FC<PromosSectionProps> = ({
               Nikmati promo pilihan Arkanza
             </p>
           </div>
-          <p className="text-[#111111]/70 text-xs sm:text-sm max-w-md mt-3 md:mt-0 leading-relaxed font-medium">
-            Kombinasi terbaik racikan kopi, menu santapan, dan diskon eksklusif untuk menemani harimu.
-          </p>
         </motion.div>
 
         {/* Promo Cards Grid */}

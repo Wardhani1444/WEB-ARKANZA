@@ -272,13 +272,13 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
   // Handle PIN Login
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === '1234' || pinInput === '8166' || pinInput === 'admin') {
+    if (pinInput === '007' || pinInput === 'admin') {
       setIsAuthenticated(true);
       setPinError(null);
       setPinInput('');
       onShowToast('Akses Kasir/Admin berhasil dibuka', 'success');
     } else {
-      setPinError('PIN salah! Silakan coba lagi (PIN Default: 1234)');
+      setPinError('PIN salah! Silakan periksa kembali PIN Anda.');
     }
   };
 
@@ -914,7 +914,7 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                     type={showPin ? 'text' : 'password'}
                     value={pinInput}
                     onChange={(e) => setPinInput(e.target.value)}
-                    placeholder="Masukkan PIN (Default: 1234)"
+                    placeholder="Masukkan PIN Admin / Kasir"
                     maxLength={10}
                     autoFocus
                     className="w-full px-4 py-3 text-center text-lg font-mono tracking-widest rounded-xl bg-white/5 border border-white/20 focus:border-[#25D366] focus:ring-1 focus:ring-[#25D366] focus:outline-none text-white placeholder:text-gray-600 placeholder:text-xs placeholder:tracking-normal transition-all"
@@ -937,10 +937,6 @@ export const AdminClaimsModal: React.FC<AdminClaimsModalProps> = ({
                     <span>Buka Panel Kasir</span>
                   </button>
                 </div>
-
-                <p className="text-[11px] text-[#A98262]/80 pt-2">
-                  💡 PIN Bawaan: <strong className="font-mono text-white">1234</strong>
-                </p>
               </form>
             </div>
           ) : (
