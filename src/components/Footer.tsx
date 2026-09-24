@@ -236,10 +236,6 @@ export const Footer: React.FC<FooterProps> = ({
                 <span>Portal Admin &amp; Kasir (PIN)</span>
               </button>
             </div>
-
-            <p className="hidden sm:flex items-center gap-1">
-              Crafted for Coffee Lovers &amp; Creators
-            </p>
           </div>
         </div>
 
